@@ -1,5 +1,5 @@
-# redmi-admin
-
+# Redmi_admin
+仿小米商城_后台管理系统
 ## Project setup
 ```
 npm install

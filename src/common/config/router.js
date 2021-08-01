@@ -5,7 +5,7 @@
  * 三、填写后不会自动生成
  * **/
 
-const routes = [{
+let routes = [{
 		path: '/',
 		name: 'layout',
 		redirect: {
@@ -17,19 +17,28 @@ const routes = [{
 				// path:'/index',
 				// name:'index',
 				// component:()=>import('../../views/index/index.vue')
+				meta: {
+					title: '后台首页'
+				},
 				component: 'index/index'
 			},
 			{
 				// path:'/shop/goods/list',
 				// name:'shop_goods_list',
+				meta: {
+					title: '商品列表'
+				},
 				component: 'shop/goods/list'
 			}
 		]
 	},
 	{
-		path: '/login',
-		name: 'login',
+		// path: '/login',
+		// name: 'login',
 		// component:()=>import('../../views/login/index.vue')
+		meta: {
+			title: '登录页'
+		},
 		component: 'login/index'
 	},
 	{

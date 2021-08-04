@@ -31,7 +31,7 @@
 					</el-menu>
 				</el-aside>
 				<!-- 主布局 -->
-				<el-main class="bg-light">
+				<el-main class="bg-light" style="position: relative; padding-bottom: 60px;">
 					<div class="border-bottom mb-3 bg-white" style="padding: 20px;margin: -20px;"
 						v-if="bran.length > 0">
 						<el-breadcrumb separator-class="el-icon-arrow-right">
@@ -130,6 +130,12 @@
 				console.log(this.bran)
 			},
 			handleSelect(key, keyPath) {
+				if (key === '100-1') {
+					 return console.log('修改资料')
+				}
+				if (key === '100-2') {
+					return console.log('退出登录')
+				}
 				this.navBar.active = key
 				// 默认选中跳转到当前激活
 				this.slideMenuActive = '0'

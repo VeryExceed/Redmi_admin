@@ -11,31 +11,26 @@ let routes = [{
 		redirect: {
 			name: 'index'
 		},
-		// component:()=> import('../../views/layout.vue'),
 		component: 'layout',
 		children: [{
-				// path:'/index',
-				// name:'index',
-				// component:()=>import('../../views/index/index.vue')
 				meta: {
 					title: '后台首页'
 				},
 				component: 'index/index'
 			},
 			{
-				// path:'/shop/goods/list',
-				// name:'shop_goods_list',
 				meta: {
 					title: '商品列表'
 				},
 				component: 'shop/goods/list'
+			},
+			{
+				meta:{title:'相册管理'},
+				component:'image/index'
 			}
 		]
 	},
 	{
-		// path: '/login',
-		// name: 'login',
-		// component:()=>import('../../views/login/index.vue')
 		meta: {
 			title: '登录页'
 		},

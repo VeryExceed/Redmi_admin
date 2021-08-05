@@ -51,7 +51,7 @@
 		</el-row>
 		<el-row :gutter="20" class="my-3">
 			<el-col :span="12">
-				<el-card class="box-card" shadow="never">
+				<el-card class="box-card" shadow="never" style="min-height: 303px;">
 					<div slot="header" class="clearfix">
 						<span>销售情况统计</span>
 						<el-button style="float: right; padding: 3px 0" type="text">操作按钮</el-button>
@@ -108,26 +108,25 @@
 	export default {
 		data() {
 			return {
-				tableData: [
-					{
-						name:"小天鹅（LittleSwan）滚筒洗衣机...",
-						num:"9"
+				tableData: [{
+						name: "小天鹅（LittleSwan）滚筒洗衣机...",
+						num: "9"
 					},
 					{
-						name:"小天鹅（LittleSwan）滚筒洗衣机...",
-						num:"9"
+						name: "小天鹅（LittleSwan）滚筒洗衣机...",
+						num: "9"
 					},
 					{
-						name:"小天鹅（LittleSwan）滚筒洗衣机...",
-						num:"9"
+						name: "小天鹅（LittleSwan）滚筒洗衣机...",
+						num: "9"
 					},
 					{
-						name:"小天鹅（LittleSwan）滚筒洗衣机...",
-						num:"9"
+						name: "小天鹅（LittleSwan）滚筒洗衣机...",
+						num: "9"
 					},
 					{
-						name:"小天鹅（LittleSwan）滚筒洗衣机...",
-						num:"9"
+						name: "小天鹅（LittleSwan）滚筒洗衣机...",
+						num: "9"
 					},
 				],
 				counts: [{

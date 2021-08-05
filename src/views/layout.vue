@@ -127,11 +127,10 @@
 					})
 				}
 				this.bran = arr
-				console.log(this.bran)
 			},
 			handleSelect(key, keyPath) {
 				if (key === '100-1') {
-					 return console.log('修改资料')
+					return console.log('修改资料')
 				}
 				if (key === '100-2') {
 					return console.log('退出登录')

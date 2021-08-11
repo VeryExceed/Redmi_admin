@@ -4,6 +4,10 @@ import router from './router.js'
 import ElementUI from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
 import store from './store'
+
+// 引入拖拽排序
+import VueDND from 'awe-dnd'
+Vue.use(VueDND)
 // 引入全局配置文件
 import $conf from "./common/config/config.js"
 Vue.prototype.$conf = $conf

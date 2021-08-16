@@ -11,7 +11,9 @@ export default {
 		display_stock: 0,
 		status: 0,
 		express: "",
-
+		
+		banners:[], // 商品大图
+		
 		oprice: 0, // 市场价格
 		pprice: 0, // 销售价格
 		cprice: 0, // 成本价格

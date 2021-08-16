@@ -3,7 +3,7 @@
 		<div class="card-header d-flex align-items-center">
 			规格项:
 			<el-input size="mini" style="width: 200px;" :value="item.name" @input="vModel('name',index,$event)">
-				<el-button slot="append" icon="el-icon-more"></el-button>
+				<el-button slot="append" icon="el-icon-more" @click="chooseSkus"></el-button>
 			</el-input>
 			<el-radio-group :value="item.type" @input="vModel('type',index,$event)" size="mini" class="ml-2"
 				style="margin-bottom: -10px;">
@@ -41,6 +41,7 @@
 	} from "vuex"
 	import skuCardChildren from "./sku-card-children.vue"
 	export default {
+		inject:['app'],
 		components: {
 			skuCardChildren
 		},
@@ -55,6 +56,9 @@
 			}
 		},
 		mounted() {
+			this.$watch('item.list',(newValue,oldValue)=>{
+				this.list = newValue
+			})
 			// 监听拖拽过程
 			// this.$dragging.$on('dragged', ({
 			// 	value
@@ -91,6 +95,15 @@
 				this.sortSkuCard({
 					action,
 					index
+				})
+			},
+			// 选择规格
+			chooseSkus() {
+				this.app.chooseSkus((res) => {
+					this.vModel('name', this.index, res.name)
+					this.vModel('type', this.index, res.type)
+					this.vModel('list', this.index, res.list)
+					this.list = res.list
 				})
 			}
 		}

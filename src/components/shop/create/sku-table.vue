@@ -15,9 +15,11 @@
 				<!-- 商品规格 -->
 				<th scope="row" width="100" v-for="(sku,skuI) in item.skus" :key="skuI">{{sku.name}}</th>
 				<td width="100">
-					<span class="btn btn-light border mr-2">
+					<span v-if="!item.image" class="btn btn-light border mr-2" @click="chooseImage(item)">
 						<i class="el-icon-plus"></i>
 					</span>
+					<img v-else :src="item.image" class="rounded" style="width: 45px; height: 45px;cursor: pointer;"
+						@click="chooseImage(item)">
 				</td>
 				<td width="100">
 					<input type="number" v-model="item.pprice" class="form-control" />
@@ -51,6 +53,7 @@
 		mapState
 	} from 'vuex'
 	export default {
+		inject: ['app'],
 		data() {
 			return {
 				list: []
@@ -65,14 +68,19 @@
 		watch: {
 			tableData(newValue, oldValue) {
 				this.list = newValue
-				console.log(this.list)
 			}
 		},
 		mounted() {
-			console.log(this.tableData)
-			console.log(this.skuLabels)
 			this.list = this.tableData
-			console.log(this.list)
+		},
+		methods: {
+			// 选择图片
+			chooseImage(item) {
+				console.log(item)
+				this.app.chooseImage((res) => {
+					item.image = res[0].url
+				}, 1)
+			}
 		}
 	}
 </script>

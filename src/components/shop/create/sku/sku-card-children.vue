@@ -2,12 +2,18 @@
 	<div class="border py-1 px-2 rounded mr-2 position-relative d-flex align-items-center">
 		<div class="mr-2" v-if="type != 0">
 			<!-- 颜色选择器 -->
-			<el-color-picker size="mini" v-if="type === 1"></el-color-picker>
+			<el-color-picker size="mini" 
+			v-if="type === 1"
+			:value="item.color"
+			@change="onColorChange"></el-color-picker>
 			<!-- 图片选择 -->
-			<span v-else class="btn btn-light border mr-2" 
-			@click="chooseImage">
-				<i class="el-icon-plus"></i>
-			</span>
+			<template v-else>
+				<span v-if="!item.image" class="btn btn-light border mr-2" @click="chooseImage">
+					<i class="el-icon-plus"></i>
+				</span>
+				<img v-else :src="item.image" class="rounded" style="width: 45px; height: 45px;cursor: pointer;"
+					@click="chooseImage">
+			</template>
 		</div>
 		<input :value="item.name" @input="inputChange" class="form-control text-center border-0"
 			style="width: 80px; font-size: 15px;" />
@@ -24,7 +30,7 @@
 		mapMutations
 	} from "vuex"
 	export default {
-		inject:['app'],
+		inject: ['app'],
 		props: {
 			type: {
 				type: Number,
@@ -48,10 +54,15 @@
 				})
 			},
 			// 选择图片
-			chooseImage(){
-				this.app.chooseImage((res)=>{
-					console.log(res)
-				},1)
+			chooseImage() {
+				this.app.chooseImage((res) => {
+					this.vModel('image',res[0].url )
+				}, 1)
+			},
+			// 监听颜色选择器
+			onColorChange(e){
+				console.log(e)
+				this.vModel('color',e )
 			}
 		}
 	}

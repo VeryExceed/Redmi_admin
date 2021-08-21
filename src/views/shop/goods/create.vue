@@ -53,18 +53,42 @@
 				</template>
 			</el-tab-pane>
 			<!-- 商品属性 -->
-			<el-tab-pane label="商品属性">商品属性</el-tab-pane>
+			<el-tab-pane label="商品属性">
+				<el-form ref="form" label-width="80px">
+					<el-form-item label="商品类型">
+						<el-select :value="goods_type_id" @change="vModel('goods_type_id',$event)" placeholder="请选择商品类型">
+							<el-option label="区域一" value="shanghai"></el-option>
+							<el-option label="区域二" value="beijing"></el-option>
+						</el-select>
+					</el-form-item>
+				</el-form>
+				<el-card class="box-card">
+					<div slot="header"  id="card-bg" class="clearfix text-white">
+						<span>商品属性</span>
+					</div>
+					<el-form ref="form" label-width="80px">
+						<el-form-item label="手机型号">
+							<el-input :value="goods_attrs.phone_model" 
+							placeholder="请输入手机型号"
+							@input="vModelGoodsAttrs({key:'phone_model',value:$event})"></el-input>
+						</el-form-item>
+					</el-form>
+				</el-card>
+			</el-tab-pane>
 			<!-- 媒体设置 -->
 			<el-tab-pane label="媒体设置">
 				<el-form label-width="80px">
 					<el-form-item label="商品大图">
 						<div class="d-flex flex-wrap">
-							<div style="width: 150px; height: 150px; cursor: pointer;"
+							<div style="width: 150px; height: 150px; cursor: pointer;position: relative;"
 								@click="chooseImage(index)"
 								v-for="(item,index) in banners" :key="index"
 								class="border rounded d-flex align-items-center justify-content-center mr-3 mb-3">
 								<img v-if="item.url" :src="item.url" style="width: 100%; height: 100%;">
 								<i v-else class="el-icon-plus text-muted" style="font-size: 30px;"></i>
+								<i class="el-icon-delete p-2 text-white" 
+								@click.stop="deleteImage(index)"
+								style="position: absolute;top: 0;right: 0;"></i>
 							</div>
 							<div v-if="banners.length < 9" style="width: 150px; height: 150px; cursor: pointer;"
 								@click="chooseImage(-1)"
@@ -81,7 +105,15 @@
 				<tinymce ref="editor" v-model="msg" @onClick="onClick" />
 			</el-tab-pane>
 			<!-- 折扣设置 -->
-			<el-tab-pane label="折扣设置">折扣设置</el-tab-pane>
+			<el-tab-pane label="折扣设置">
+				<el-form ref="form" label-width="80px">
+					<el-form-item label="会员价">
+						<el-input :value="discount" @input="vModel('discount',$event)">
+							<template slot="append">%</template>
+						</el-input>
+					</el-form-item>
+				</el-form>
+			</el-tab-pane>
 		</el-tabs>
 	</div>
 </template>
@@ -138,7 +170,10 @@
 			...mapState({
 				skus_type: state => state.goods_create.skus_type,
 				sku_card: state => state.goods_create.sku_card,
-				banners: state => state.goods_create.banners
+				banners: state => state.goods_create.banners,
+				goods_type_id:state=>state.goods_create.goods_type_id,
+				goods_attrs:state=>state.goods_create.goods_attrs,
+				discount:state=>state.goods_create.discount
 			}),
 			// 规格卡片总数
 			skuCardTotal() {
@@ -146,7 +181,7 @@
 			}
 		},
 		methods: {
-			...mapMutations(['vModelState', 'addSkuCard']),
+			...mapMutations(['vModelState', 'addSkuCard','vModelGoodsAttrs']),
 			// 修改表单的值
 			vModel(key, value) {
 				this.vModelState({
@@ -196,6 +231,18 @@
 					this.vModel('banners',list)
 				},index === -1 ? count : 1)
 			},
+			// 删除大图
+			deleteImage(index){
+				this.$confirm('是否要删除该图片?', '提示', {
+					confirmButtonText: '删除',
+					cancelButtonText: '取消',
+					type: 'warning'
+				}).then(() => {
+					let list = [...this.banners]
+					list.splice(index,1)
+					this.vModel('banners',list)
+				})
+			}
 		}
 	}
 </script>
@@ -206,14 +253,19 @@
 		margin-top: -1rem;
 		margin-bottom: 0 !important;
 
-		.el-form-item {
-			margin-bottom: 15px;
-		}
+		
+	}
+	.goods_create .el-form-item {
+		margin-bottom: 15px;
 	}
 
 	.posiab {
 		position: absolute;
 		top: 12px;
 		left: 200px;
+	}
+	
+	::v-deep .el-card__header{
+		background-color: #6c757d!important;
 	}
 </style>

@@ -78,10 +78,11 @@
 					<el-table-column prop="status" label="商品状态" align="center">
 						<template slot-scope="scope">
 							<el-button type="success" size="mini" @click="scope.row.ischeck = 1" plain>审核通过</el-button>
-							<el-button class="ml-0 mt-2" type="danger" size="mini" @click="scope.row.ischeck = 2" plain>审核通过</el-button>
+							<el-button class="ml-0 mt-2" type="danger" size="mini" @click="scope.row.ischeck = 2" plain>
+								审核通过</el-button>
 							<!-- <el-button :type="scope.row.status ? 'success' : 'danger'" size="mini" plain
 								@click="changeStatus(scope.row)">{{scope.row.status ? '上架': '下架'}}</el-button> -->
-						
+
 						</template>
 					</el-table-column>
 					<el-table-column prop="stock" label="总库存" align="center">

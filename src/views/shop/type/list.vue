@@ -76,8 +76,60 @@
 						</el-button>
 					</div>
 				</el-form-item>
-				<el-form-item label="属性列表" prop="value">
-					属性列表
+				<el-form-item label="属性列表">
+					 <el-table
+					      :data="value_list"
+					      style="width: 100%">
+					      <el-table-column
+					        prop="order"
+					        label="排序"
+					        width="80">
+							 <template slot-scope="scope">
+							      <el-input v-model="scope.row.order" size="mini" placeholder="排序"></el-input>
+							</template>
+					      </el-table-column>
+					      <el-table-column
+					        prop="name"
+					        label="属性名称"
+					        width="130">
+							<template slot-scope="scope">
+							      <el-input v-model="scope.row.name" size="mini" placeholder="属性名称"></el-input>
+							</template>
+					      </el-table-column>
+						  <el-table-column
+						    prop="type"
+						    label="所属类型"
+						    width="130">
+							<template slot-scope="scope">
+							    <el-select v-model="scope.row.type" placeholder="请选择所属类型">
+							    	<el-option label="输入框" value="input"></el-option>
+							    	<el-option label="单选框" value="radio"></el-option>
+									<el-option label="多选框" value="checkbox"></el-option>
+							    </el-select>
+							</template>
+						  </el-table-column>
+						  <el-table-column label="属性值">
+							<template slot-scope="scope">
+							   <el-input type="textarea" v-model="scope.row.value" 
+							   placeholder="一行为一个属性值，多个属性值用换行输入">
+							   </el-input>
+							   <!-- <span>{{scope.row.value}}</span> -->
+							</template>
+						  </el-table-column>
+						  <el-table-column
+						    label="操作"
+						    width="180">
+							<template slot-scope="scope">
+								<el-button type="text" size="mini">完成</el-button>
+								<el-button type="text" size="mini">删除</el-button>
+							</template>
+						  </el-table-column>
+					   
+					    </el-table>
+				</el-form-item>
+				<el-form-item >
+					添加一个属性
+					<el-button type="text" size="mini" icon="el-icon-plus">添加一个属性</el-button>
 				</el-form-item>
 			</el-form>
 			<div slot="footer" class="dialog-footer">
@@ -134,6 +186,13 @@
 					type: 0,
 					value: ''
 				},
+				value_list: [{
+					order: 50,
+					name: "属性名称",
+					type: "input",
+					value: "属性值",
+					isedit: false
+				}],
 				rules: {
 					name: [{
 						required: true,

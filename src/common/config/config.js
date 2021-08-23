@@ -42,10 +42,26 @@ export default {
 					icon:"el-icon-s-help",
 					name:"商品类型",
 					pathname:"shop_type_list"
+				},{
+					icon: "el-icon-s-help",
+					name: "商品评论",
+					pathname:"shop_comment_list"
 				}]
 			},
 			{
-				name: '订单'
+				name: '订单',
+				subActive:'0',
+				submenu:[{
+					icon: "el-icon-s-claim",
+					name: "发票管理",
+					pathname:"order_invoice_list"
+				},{
+					icon: "el-icon-s-claim",
+					name: "售后服务",
+					pathname:"order_after-sale_list"
+				}]
+				
+				
 			},
 			{
 				name: '会员'

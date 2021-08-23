@@ -59,6 +59,30 @@ let routes = [{
 				},
 				component:'shop/type/list'
 				
+			},
+			{
+				meta:{
+					title:'商品评论管理',
+					
+				},
+				component:'shop/comment/list'
+				
+			},
+			{
+				meta:{
+					title:'发票管理',
+					
+				},
+				component:'order/invoice/list'
+				
+			},
+			{
+				meta:{
+					title:'售后服务',
+					
+				},
+				component:'order/after-sale/list'
+				
 			}
 		]
 	},

@@ -82,7 +82,13 @@ export default {
 				}]
 			},
 			{
-				name: "设置"
+				name: "设置",
+				subActive:'0',
+				submenu:[{
+					icon: "el-icon-s-claim",
+					name: "基础设置",
+					pathname:"set_base"
+				}]
 			}
 		]
 	}

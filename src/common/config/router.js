@@ -107,6 +107,14 @@ let routes = [{
 				},
 				component:'user/user-level/list'
 				
+			},
+			{
+				meta:{
+					title:'基础设置',
+					
+				},
+				component:'set/base/index'
+				
 			}
 		]
 	},

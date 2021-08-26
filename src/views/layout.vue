@@ -76,7 +76,7 @@
 		},
 		watch: {
 			'$route'(to, from) {
-				// 本地存储
+				// 本地存储1
 				localStorage.setItem('navActive', JSON.stringify({
 					top: this.navBar.active || '0',
 					left: this.slideMenuActive || '0'

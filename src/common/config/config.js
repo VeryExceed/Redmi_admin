@@ -88,6 +88,21 @@ export default {
 					icon: "el-icon-s-claim",
 					name: "基础设置",
 					pathname:"set_base"
+				},
+				{
+					icon: "el-icon-s-claim",
+					name: "物流设置",
+					pathname:"set_express"
+				},
+				{
+					icon: "el-icon-s-claim",
+					name: "管理员管理",
+					pathname:"set_manager"
+				},
+				{
+					icon: "el-icon-s-claim",
+					name: "交易设置",
+					pathname:"set_payment"
 				}]
 			}
 		]

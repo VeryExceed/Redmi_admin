@@ -58,7 +58,11 @@
 				this.$refs.ruleForm.validate((e)=>{
 					if (!e) return
 					// 提交表单
-					this.$router.push({name:'index'})
+					this.axios.post('/admin/login',this.form).then(res=>{
+						console.log(res);
+					}).catch(err=>{
+						console.log(err);
+					})
 				})
 			}
 		}

@@ -11,9 +11,10 @@
 
 					<el-submenu index="100">
 						<template slot="title">
-							<el-avatar size="medium" src="http://p0.qhimg.com/bdm/1024_768_85/t01642c788ea60ce064.jpg">
+							<el-avatar size="small"
+								:src="user.avatar ? user.avatar : 'http://p0.qhimg.com/bdm/1024_768_85/t01642c788ea60ce064.jpg'">
 							</el-avatar>
-							mewLuo
+							{{user.username}}
 						</template>
 						<el-menu-item index="100-1">修改</el-menu-item>
 						<el-menu-item index="100-2">退出</el-menu-item>
@@ -58,6 +59,9 @@
 
 <script>
 	import common from "@/common/mixins/common.js"
+	import {
+		mapState
+	} from 'vuex';
 	export default {
 		mixins: [common],
 		data() {
@@ -85,6 +89,9 @@
 			}
 		},
 		computed: {
+			...mapState({
+				user: state => state.user.user
+			}),
 			slideMenuActive: {
 				get() {
 					return this.navBar.list[this.navBar.active].subActive || '0'
@@ -133,7 +140,8 @@
 					return console.log('修改资料')
 				}
 				if (key === '100-2') {
-					return console.log('退出登录')
+					// 退出登录
+					return this.logout()
 				}
 				this.navBar.active = key
 				// 默认选中跳转到当前激活
@@ -151,6 +159,32 @@
 					name: this.slideMenus[key].pathname
 				})
 
+			},
+			// 退出登录
+			logout() {
+				this.axios.post('/admin/logout', {}, {
+					headers: {
+						token: this.user.token
+					}
+				}).then(res => {
+					this.$message('退出成功')
+					// 清除状态和存储
+					this.$store.commit('logout')
+					// 返回到登录页
+					this.$router.push({
+						name: 'login'
+					})
+				}).catch(err => {
+					if (err.response.data && err.response.data.errorCode) {
+						this.$message.error(err.response.data.msg)
+						// 清除状态和存储
+						this.$store.commit('logout')
+						// 返回到登录页
+						this.$router.push({
+							name: "login"
+						})
+					}
+				})
 			}
 		}
 	}

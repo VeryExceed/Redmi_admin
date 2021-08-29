@@ -59,9 +59,18 @@
 					if (!e) return
 					// 提交表单
 					this.axios.post('/admin/login',this.form).then(res=>{
-						console.log(res);
+						// 存储到vuex
+						// 存储到本地存储
+						console.log(res)
+						this.$store.commit('login',res.data.data)
+						// 成功提示
+						this.$message('登录成功')
+						// 跳转后台首页
+						this.$router.push({name:'index'})
 					}).catch(err=>{
-						console.log(err);
+						if (err.response.data && err.response.data.errorCode) {
+							this.$message.error(err.response.data.msg)
+						}
 					})
 				})
 			}

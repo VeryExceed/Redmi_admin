@@ -30,6 +30,7 @@
 </template>
 
 <script>
+	import {mapGetters} from 'vuex'
 	export default {
 		data() {
 			return {
@@ -54,6 +55,11 @@
 				}
 			}
 		},
+		computed: {
+			...mapGetters([
+				'adminIndex'
+			]) 
+		},
 		methods: {
 			submit() {
 				this.$refs.ruleForm.validate((e) => {
@@ -62,9 +68,16 @@
 					this.loading = true
 					this.axios.post('/admin/login', this.form).then(res => {
 						// 存储到vuex
+						let data = res.data.data 
 						// 存储到本地存储
 						console.log(res)
-						this.$store.commit('login', res.data.data)
+						this.$store.commit('login', data)
+						// 存储权限规则
+						if (data.role && data.role.rules) {
+							window.sessionStorage.setItem('rules', JSON.stringify(data.role.rules))
+						}
+						// 生成后台菜单
+						this.$store.commit('createNavBar',data.tree)
 						// 成功提示
 						this.$message({
 							message: '登录成功',
@@ -73,7 +86,7 @@
 						this.loading = false
 						// 跳转后台首页
 						this.$router.push({
-							name: 'index'
+							name: this.adminIndex
 						})
 					}).catch(err => {
 						this.loading = false

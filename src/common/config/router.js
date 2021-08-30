@@ -139,7 +139,16 @@ let routes = [{
 				},
 				component:'set/payment/index'
 				
+			},
+			{
+				meta:{
+					title:'404错误',
+					
+				},
+				component:'error/404'
+				
 			}
+			
 		]
 	},
 	{

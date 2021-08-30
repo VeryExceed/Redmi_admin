@@ -17,7 +17,8 @@
 									</el-input>
 								</el-form-item>
 								<el-form-item>
-									<el-button type="primary" size="medium" class="w-100" @click="submit">立即登录</el-button>
+									<el-button type="primary" size="medium" class="w-100" @click="submit"
+										:loading="loading">{{loading ? '登录中...' : '立即登录'}}</el-button>
 								</el-form-item>
 							</el-form>
 						</div>
@@ -32,13 +33,13 @@
 	export default {
 		data() {
 			return {
+				loading: false,
 				form: {
 					username: "",
 					password: ""
 				},
 				rules: {
-					username: [
-						{
+					username: [{
 							required: true,
 							message: '请输入用户名',
 							trigger: 'blur'
@@ -53,24 +54,29 @@
 				}
 			}
 		},
-		methods:{
-			submit(){
-				this.$refs.ruleForm.validate((e)=>{
+		methods: {
+			submit() {
+				this.$refs.ruleForm.validate((e) => {
 					if (!e) return
 					// 提交表单
-					this.axios.post('/admin/login',this.form).then(res=>{
+					this.loading = true
+					this.axios.post('/admin/login', this.form).then(res => {
 						// 存储到vuex
 						// 存储到本地存储
 						console.log(res)
-						this.$store.commit('login',res.data.data)
+						this.$store.commit('login', res.data.data)
 						// 成功提示
-						this.$message('登录成功')
+						this.$message({
+							message: '登录成功',
+							type: 'success'
+						});
+						this.loading = false
 						// 跳转后台首页
-						this.$router.push({name:'index'})
-					}).catch(err=>{
-						if (err.response.data && err.response.data.errorCode) {
-							this.$message.error(err.response.data.msg)
-						}
+						this.$router.push({
+							name: 'index'
+						})
+					}).catch(err => {
+						this.loading = false
 					})
 				})
 			}

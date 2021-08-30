@@ -163,9 +163,7 @@
 			// 退出登录
 			logout() {
 				this.axios.post('/admin/logout', {}, {
-					headers: {
-						token: this.user.token
-					}
+					token:true
 				}).then(res => {
 					this.$message('退出成功')
 					// 清除状态和存储
@@ -175,15 +173,13 @@
 						name: 'login'
 					})
 				}).catch(err => {
-					if (err.response.data && err.response.data.errorCode) {
-						this.$message.error(err.response.data.msg)
 						// 清除状态和存储
 						this.$store.commit('logout')
 						// 返回到登录页
 						this.$router.push({
 							name: "login"
 						})
-					}
+					
 				})
 			}
 		}

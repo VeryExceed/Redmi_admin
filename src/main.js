@@ -80,6 +80,22 @@ axios.interceptors.response.use((response)=>{
 	// 响应错误
 	return Promise.reject(err)
 })
+// 自定义指令实现权限验证
+Vue.directive('auth',{
+	inserted(el,binding,vnode,oldVnode){
+		let user = window.sessionStorage.getItem('user')
+		user = user ? JSON.parse(user) : {}
+		if (!user.super) {
+			let rules = user.ruleNames ? user.ruleNames : []
+			
+			let v = rules.find(item=> item === binding.value)
+			if (!v) {
+				el.parentNode.removeChild(el)
+			}
+		}
+		
+	}
+})
 
 new Vue({
   router,

@@ -45,7 +45,8 @@
 
 			<el-tab-pane label="角色列表" name="third">
 				<div class="d-flex align-items-center">
-					<el-button type="primary" size="mini">添加角色</el-button>
+					<el-button type="primary" size="mini"
+					v-auth="'添加角色'">添加角色</el-button>
 				</div>
 				<el-table border class="mt-3"
 				:data="groupList" style="width: 100%">

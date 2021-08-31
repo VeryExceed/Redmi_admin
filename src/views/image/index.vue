@@ -130,6 +130,8 @@
 				},
 				albumIndex: 0,
 				albums: [],
+				albumsPagr:1,
+				albumTotal:0,
 				albumEditIndex: -1,
 				albumModel: false,
 				albumForm: {
@@ -226,6 +228,9 @@
 						checkOrder: 0
 					})
 				}
+			},
+			// 获取相册分类列表
+			getAlbumList(){
 			},
 			// 切换相册
 			albumChange(index) {

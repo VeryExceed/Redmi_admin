@@ -32,7 +32,8 @@
 					</el-menu>
 				</el-aside>
 				<!-- 主布局 -->
-				<el-main class="bg-light" style="position: relative; padding-bottom: 60px;">
+				<el-main class="bg-light" style="position: relative; padding-bottom: 60px;"
+				v-loading="loading">
 					<div class="border-bottom mb-3 bg-white" style="padding: 20px;margin: -20px;"
 						v-if="bran.length > 0">
 						<el-breadcrumb separator-class="el-icon-arrow-right">
@@ -64,9 +65,15 @@
 	} from 'vuex';
 	export default {
 		mixins: [common],
+		provide(){
+			return {
+				layout:this
+			}
+		},
 		data() {
 			return {
-				bran: []
+				bran: [],
+				loading:false
 			}
 		},
 		created() {
@@ -108,6 +115,31 @@
 			}
 		},
 		methods: {
+			// 加载更多通用方法
+			getList(options) {
+				this.loading = true
+				this.axios.get(options.url,{
+					token:true
+				}).then(res=>{
+					let result = res.data.data
+					let list = result.list
+					if (options.success && typeof options.success === 'function') {
+						options.success({
+							list,
+							totalCount:result.totalCount
+						})
+						
+					}
+					this.loading = false
+				},err=>{
+					if (options.fail && typeof options.fail === 'function') {
+						options.fail({
+							err
+						})
+					}
+					this.loading = false 
+				})
+			},
 			__initNvaBar() {
 				let r = localStorage.getItem('navActive')
 				if (r) {
@@ -166,8 +198,7 @@
 			// 退出登录
 			logout() {
 				this.axios.post('/admin/logout', {}, {
-					token:true,
-					loading:true
+					token:true
 				}).then(res => {
 					this.$message('退出成功')
 					// 清除状态和存储
@@ -177,12 +208,14 @@
 						name: 'login'
 					})
 				}).catch(err => {
+					if (err.respomse.data && err.response.data.errorCode === 20000) {
 						// 清除状态和存储
 						this.$store.commit('logout')
 						// 返回到登录页
 						this.$router.push({
 							name: "login"
 						})
+					}
 					
 				})
 			}

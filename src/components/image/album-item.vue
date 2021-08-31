@@ -3,12 +3,12 @@
 		:class="{'active sum-active':active}" @click.stop="$emit('change',index)">
 		{{item.name}}
 	
-		<span class="btn btn-light btn-sm border ml-auto" v-if="showOptions">
-			{{item.num}}
+		<span class="btn btn-light btn-sm border ml-auto" v-if="!showOptions">
+			{{item.images_count}}
 		</span>
 		<el-dropdown class="ml-auto" v-else>
 			<span class="btn btn-light btn-sm border">
-				{{item.num}}
+				{{item.images_count}}
 				<i class="el-icon-arrow-down el-icon--right"></i>
 			</span>
 			<el-dropdown-menu slot="dropdown">

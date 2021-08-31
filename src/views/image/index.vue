@@ -73,9 +73,13 @@
 					</el-button-group>
 				</div>
 				<div style="flex: 1;" class="px-2">
-					<el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange"
-						:current-page="currentPage" :page-sizes="[100, 200, 300, 400]" :page-size="100"
-						layout="total, sizes, prev, pager, next, jumper" :total="400">
+					<el-pagination @size-change="handleSizeChange" 
+					@current-change="handleCurrentChange"
+						:current-page="currentPage" 
+						:page-sizes="pageSizes" 
+						:page-size="pageSize"
+						:total="total"
+						layout="total, sizes, prev, pager, next, jumper">
 					</el-pagination>
 				</div>
 			</el-footer>
@@ -118,6 +122,7 @@
 <script>
 	import albumItem from "@/components/image/album-item.vue"
 	export default {
+		inject:['layout'],
 		components: {
 			albumItem
 		},
@@ -130,7 +135,7 @@
 				},
 				albumIndex: 0,
 				albums: [],
-				albumsPagr:1,
+				albumPage:1,
 				albumTotal:0,
 				albumEditIndex: -1,
 				albumModel: false,
@@ -142,7 +147,11 @@
 				previewUrl: "", // 预览图片地址
 				imageList: [],
 				chooseList: [], // 选中的数组
-				currentPage: 1
+				currentPage: 1,
+				
+				pageSize:10,
+				pagrSizes:[10,20,50,100],
+				total:100
 			}
 		},
 		created() {
@@ -211,26 +220,26 @@
 				item.checkOrder = 0
 			},
 			__init() {
-				for (var i = 0; i < 20; i++) {
-					this.albums.push({
-						name: "相册" + i,
-						num: Math.floor(Math.random() * 100),
-						order: 0
-					})
-				}
-
-				for (var i = 1; i <= 30; i++) {
-					this.imageList.push({
-						id: i,
-						url: "http://p5.qhimg.com/bdm/1024_768_85/t01a1b8b2acf1deca41.jpg",
-						name: '图片' + i,
-						ischeck: false,
-						checkOrder: 0
-					})
-				}
+				// 获取相册分类
+				this.getAlbumList()
 			},
 			// 获取相册分类列表
 			getAlbumList(){
+				this.layout.getList({
+					url:"/admin/imageclass/"+this.albumPage,
+					limit:10,
+					success:(res) =>{
+						console.log(res)
+						this.albums = res.list 
+						this.albumTotal = res.totalCount
+						// 获取第一个分类下的图片
+					},
+					fail:(err)=>{
+						if (this.albumPage >1) {
+							this.albumPage--
+						}
+					}
+				})
 			},
 			// 切换相册
 			albumChange(index) {

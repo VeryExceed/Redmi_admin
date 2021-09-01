@@ -5,9 +5,9 @@
 			<el-header class="d-flex align-items-center border-bottom">
 				<div class="d-flex mr-auto">
 					<el-select v-model="searchForm.order" class="mr-2" size="mini" style="width: 150px;"
-						placeholder="请选择活动区域">
-						<el-option label="区域一" value="shanghai"></el-option>
-						<el-option label="区域二" value="北京"></el-option>
+						placeholder="请选择图片排序方式">
+						<el-option label="降序" value="desc"></el-option>
+						<el-option label="升序" value="asc"></el-option>
 					</el-select>
 					<el-input v-model="searchForm.keyword" class="mr-2" size="mini" style="width: 150px;"></el-input>
 					<el-button type="success" size="mini">搜索</el-button>
@@ -130,7 +130,7 @@
 			return {
 				uploadModel: false,
 				searchForm: {
-					order: "",
+					order: "desc",
 					keyword: ""
 				},
 				albumIndex: 0,
@@ -150,8 +150,8 @@
 				currentPage: 1,
 				
 				pageSize:10,
-				pagrSizes:[10,20,50,100],
-				total:100
+				pageSizes:[10,20,50,100],
+				total:10
 			}
 		},
 		created() {
@@ -160,6 +160,15 @@
 		computed: {
 			albumModelTitle() {
 				return this.albumEditIndex > -1 ? '修改相册' : '创建相册'
+			},
+			// 当前选中相册的图片列表URL
+			
+			getImageListUrl(){
+				let other = ''
+				if (this.searchForm.keyword != ''){
+					other = `&keyword=${this.searchForm.keyword}`
+				}
+				return `/admin/imageclass/:id/image/:page?limit=[:limit]&order=[:order]&keyword=[:keyword]`
 			}
 		},
 		methods: {
@@ -220,27 +229,28 @@
 				item.checkOrder = 0
 			},
 			__init() {
-				// 获取相册分类
-				this.getAlbumList()
-			},
-			// 获取相册分类列表
-			getAlbumList(){
-				this.layout.getList({
-					url:"/admin/imageclass/"+this.albumPage,
-					limit:10,
-					success:(res) =>{
-						console.log(res)
-						this.albums = res.list 
-						this.albumTotal = res.totalCount
-						// 获取第一个分类下的图片
-					},
-					fail:(err)=>{
-						if (this.albumPage >1) {
-							this.albumPage--
-						}
-					}
+				// 获取相册列表
+				// this.layout.showLoading()
+				this.axios.get('/admin/imageclass/'+this.albumPage,{
+					token:true
+				}).then(res=>{
+					let result = res.data.data
+					console.log(result)
+					this.albums = result.list
+					this.albumToatl = result.totalCount
+					// 获取选中相册下的第一页图片列表
+				}).catch(err=>{
+					this.layout.hideLoading()
 				})
 			},
+			// 获取对应相册下的图片列表
+			getImageList(){
+				// this.layout.showLoading()
+				this.axios.get(this.getImageListUrl,{
+					token:true
+				})
+			},
+			
 			// 切换相册
 			albumChange(index) {
 				this.albumIndex = index

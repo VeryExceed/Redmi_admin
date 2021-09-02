@@ -9,8 +9,8 @@
 						<el-option label="降序" value="desc"></el-option>
 						<el-option label="升序" value="asc"></el-option>
 					</el-select>
-					<el-input v-model="searchForm.keyword" class="mr-2" size="mini" style="width: 150px;"></el-input>
-					<el-button type="success" size="mini">搜索</el-button>
+					<el-input placeholder="输入图片名称" v-model="searchForm.keyword" class="mr-2" size="mini" style="width: 150px;"></el-input>
+					<el-button type="success" size="mini" @click="getImageList">搜索</el-button>
 				</div>
 				<el-button type="warning" size="mini" @click="unChoose" v-if="chooseList.length">取消选中</el-button>
 				<el-button type="danger" size="mini" @click="imageDel({all:true})" v-if="chooseList.length">批量删除
@@ -68,8 +68,8 @@
 				<div style="width: 200px;flex-shrink: 0;"
 					class="h-100 d-flex align-items-center justify-content-center border-right">
 					<el-button-group>
-						<el-button size="mini">上一页</el-button>
-						<el-button size="mini">下一页</el-button>
+						<el-button size="mini" :disabled="albumPage ===1" @click="changeAlbumPage('pre')">上一页</el-button>
+						<el-button size="mini" :disabled="albumPage === Math.ceil(albumTotal / 10)" @click="changeAlbumPage('next')">下一页</el-button>
 					</el-button-group>
 				</div>
 				<div style="flex: 1;" class="px-2">
@@ -161,14 +161,22 @@
 			albumModelTitle() {
 				return this.albumEditIndex > -1 ? '修改相册' : '创建相册'
 			},
+			// 选中相册id
+			image_class_id(){
+				let item = this.albums[this.albumIndex]
+				console.log(item.id)
+				if (item) {
+					return item.id
+				}
+				return 0
+			},
 			// 当前选中相册的图片列表URL
-			
 			getImageListUrl(){
 				let other = ''
 				if (this.searchForm.keyword != ''){
 					other = `&keyword=${this.searchForm.keyword}`
 				}
-				return `/admin/imageclass/:id/image/:page?limit=[:limit]&order=[:order]&keyword=[:keyword]`
+				return `/admin/imageclass/${this.image_class_id}/image/${this.currentPage}?limit=${this.pageSize}&order=${this.searchForm.order}${other}`
 			}
 		},
 		methods: {
@@ -239,21 +247,39 @@
 					this.albums = result.list
 					this.albumToatl = result.totalCount
 					// 获取选中相册下的第一页图片列表
+					this.getImageList()
 				}).catch(err=>{
 					this.layout.hideLoading()
 				})
 			},
 			// 获取对应相册下的图片列表
 			getImageList(){
-				// this.layout.showLoading()
+				this.layout.showLoading()
 				this.axios.get(this.getImageListUrl,{
 					token:true
+				}).then(res=>{
+					console.log(res)
+					let result = res.data.data
+					this.imageList = result.list.map(item=>{
+						return {
+							id:item.id,
+							url:item.url,
+							name:item.name,
+							ischeck:false,
+							checkOrder:0
+						}
+					})
+					this.total = result.totalCount
+					this.layout.hideLoading()
+				}).catch(err=>{
+					this.layout.hideLoading()
 				})
 			},
 			
 			// 切换相册
 			albumChange(index) {
 				this.albumIndex = index
+				this.getImageList()
 			},
 			// 打开相册修改/创建框
 			openAlbumModel(obj) {
@@ -296,8 +322,22 @@
 			},
 			// 修改相册
 			albumEdit() {
-				this.albums[this.albumEditIndex].name = this.albumForm.name
-				this.albums[this.albumEditIndex].order = this.albumForm.order
+				let item = this.albums[this.albumEditIndex]
+				this.layout.showLoading()
+				this.axios.post('/admin/imageclass/'+item.id,this.albumForm,{
+					token:true
+				}).then(res=>{
+					this.$message({
+						message:'修改成功',
+						type:'success'
+					})
+					this.layout.hideLoading()
+					this.__init()
+				}).catch(err=>{
+					this.layout.hideLoading()
+				})
+				// this.albums[this.albumEditIndex].name = this.albumForm.name
+				// this.albums[this.albumEditIndex].order = this.albumForm.order
 			},
 			// 删除相册
 			albumDel(index) {
@@ -366,9 +406,22 @@
 			},
 			handleSizeChange(val) {
 				console.log(`每页 ${val} 条`);
+				this.pageSize = val
+				this.getImageList()
 			},
 			handleCurrentChange(val) {
 				console.log(`当前页: ${val}`);
+				this.currentPage = val
+				this.getImageList()
+			},
+			// 相册分页功能
+			changeAlbumPage(type) {
+				if (type === 'pre') {
+					this.albumPage--
+				}else {
+					this.albumPage++
+				}
+				this.__init()
 			}
 
 

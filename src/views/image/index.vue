@@ -238,7 +238,7 @@
 			},
 			__init() {
 				// 获取相册列表
-				// this.layout.showLoading()
+				this.layout.showLoading()
 				this.axios.get('/admin/imageclass/'+this.albumPage,{
 					token:true
 				}).then(res=>{
@@ -311,14 +311,22 @@
 					this.albumEdit()
 					return this.albumModel = false
 				}
-				// 追加albums
-				this.albums.unshift({
-					name: this.albumForm.name,
-					order: this.albumForm.order,
-					num: 0
+				// 创建相册
+				this.layout.showLoading()
+				this.axios.post('/admin/imageclass',this.albumForm,{
+					token:true
+				}).then(res=>{
+					// 隐藏表单
+					this.albumModel= false
+					this.layout.hideLoading()
+					this.$message({
+						message:'创建相册列表成功',
+						type:'success'
+					})
+					this.__init()
+				}).catch(err=>{
+					this.layout.hideLoading()
 				})
-				this.albumModel = false
-
 			},
 			// 修改相册
 			albumEdit() {
@@ -346,11 +354,21 @@
 					camcelButtonText: '取消',
 					type: 'warning'
 				}).then(() => {
-					this.albums.splice(index, 1)
-					this.$message({
-						message: '删除成功',
-						type: 'success'
+					let id = this.albums[index].id
+					this.layout.showLoading()
+					this.axios.delete('/admin/imageclass/' + id,{
+						token:true
+					}).then(res=>{
+						this.$message({
+							message: '删除成功',
+							type: 'success'
+						})
+						this.__init()
+						this.layout.hideLoading()
+					}).catch(err=>{
+						this.layout.hideLoading()
 					})
+					
 				})
 
 			},

@@ -53,7 +53,7 @@
 												<el-button size="mini" icon="el-icon-edit" class="p-2"
 													@click="imageEdit(item,index)"></el-button>
 												<el-button size="mini" icon="el-icon-delete" class="p-2"
-													@click="imageDel({index})"></el-button>
+													@click="imageDel({index,item})"></el-button>
 											</el-button-group>
 										</div>
 									</div>
@@ -392,11 +392,23 @@
 				}).then(({
 					value
 				}) => {
-					item.name = value
-					this.$message({
-						type: 'success',
-						message: '修改成功'
-					});
+					this.layout.showLoading()
+					this.axios.post('/admin/image/'+item.id,{
+						name:value,
+					},{
+						token:true
+					}).then(res=>{
+						this.__init()
+						this.layout.hideLoading()
+						this.$message({
+							type: 'success',
+							message: '修改成功'
+						});
+					}).catch(err=>{
+						this.layout.hideLoading()
+					})
+		
+					
 				})
 			},
 			// 删除当前图片
@@ -408,18 +420,39 @@
 						type: 'warning'
 					}).then(() => {
 					if (obj.all) {
-						let list = this.imageList.filter(img => {
-							return !this.chooseList.some(c => c.id === img.id)
+						// 批量删除
+						let ids = this.chooseList.map(item=>item.id)
+						this.axios.post('/admin/image/delete_all',{
+							ids:ids
+						},{
+							token:true
+						}).then(res=>{
+							this.$message({
+								message:'删除成功',
+								type:'success'
+							})
+							this.__init()
+							this.chooseList = []
+							this.layout.hideLoading()
+						}).catch(err=>{
+							this.layout.hideLoading()
 						})
-						this.imageList = list
-						this.chooseList = []
 					} else {
-						this.imageList.splice(obj.index, 1)
-					}
-					this.$message({
-						message: '删除成功',
-						type: 'success'
-					});
+						// 删除单个
+						this.axios.delete('/admin/image/'+obj.item.id,{
+							token:true
+						}).then(res=>{
+							this.$message({
+								message: '删除成功',
+								type: 'success'
+							});
+							this.__init()
+							this.layout.hideLoading()
+						}).catch(err=>{
+							this.layout.hideLoading()
+						})
+					 }
+					
 				})
 			},
 			handleSizeChange(val) {

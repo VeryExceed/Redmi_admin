@@ -100,9 +100,17 @@
 			</div>
 		</el-dialog>
 		<!-- 上传图片 -->
-		<el-dialog title="上传图片" :visible.sync="uploadModel">
+		<el-dialog title="上传图片" :visible.sync="uploadModel" @close="__init">
 			<div class="text-center">
-				<el-upload class="upload-demo" drag action="https://jsonplaceholder.typicode.com/posts/" multiple>
+				<el-upload 
+				class="upload-demo w-100" 
+				drag 
+				action="/admin/image/upload" 
+				multiple
+				:headers="{token:$store.state.user.token}"
+				:data="{ image_class_id:image_class_id }"
+				name="img"
+				:on-success="uploadSuccess">
 					<i class="el-icon-upload"></i>
 					<div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
 					<div class="el-upload__tip" slot="tip">只能上传jpg/png文件，且不超过500kb</div>
@@ -164,7 +172,6 @@
 			// 选中相册id
 			image_class_id(){
 				let item = this.albums[this.albumIndex]
-				console.log(item.id)
 				if (item) {
 					return item.id
 				}
@@ -473,6 +480,10 @@
 					this.albumPage++
 				}
 				this.__init()
+			},
+			// 上传成功
+			uploadSuccess(response, file, fileList) {
+				console.log(response, file, fileList)
 			}
 
 

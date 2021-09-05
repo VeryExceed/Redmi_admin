@@ -29,6 +29,7 @@
 
 <script>
 	export default {
+		inject:['layout'],
 		data() {
 			return {
 				data: [{
@@ -55,7 +56,33 @@
 				}
 			}
 		},
+		created(){
+			this.__init()
+		},
 		methods: {
+			// 初始化
+			__init(){
+				this.layout.showLoading()
+				this.axios.get('/admin/category',{
+					token:true
+				}).then(res=>{
+					console.log(res)
+					let data = res.data.data
+					let addEditStatus = function(arr){
+						arr.forEach(item=>{
+							item.editStatus = false
+							if (item.child.length) {
+								addEditStatus(item.child)
+							}
+						})
+					}
+					addEditStatus(data)
+					this.data = data
+					this.layout.hideLoading()
+				}).catch(err=>{
+					this.layout.hideLoading()
+				})
+			},
 			handleNodeClick(data) {
 				console.log(data);
 			},

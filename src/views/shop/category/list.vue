@@ -6,7 +6,9 @@
 		</div>
 
 		<el-tree :data="data" :props="defaultProps" @node-click="handleNodeClick" default-expand-all
-			:expand-on-click-node="false" draggable @node-drop="nodeDrop">
+			:expand-on-click-node="false" draggable 
+			@node-drop="nodeDrop"
+			@node-drag-end="nodeDragEnd">
 			<span class="custom-tree-node" slot-scope="{ node, data }">
 				<div>
 					<el-input v-if="data.editStatus" size="mini" v-model="data.name"></el-input>
@@ -41,6 +43,31 @@
 		},
 		created() {
 			this.__init()
+		},
+		computed: {
+			// 排序后的数据
+			sortData(){
+				let data = []
+				let sort = function(arr){
+					arr.forEach(item=>{
+						data.push(item)
+						if (item.child.length) {
+							sort(item.child)
+						}
+					})
+				}
+				// 多维数组转一维数组
+				sort(this.data)
+				// 排序
+				data = data.map((item,index)=>{
+					return {
+						id:item.id,
+						order:index,
+						category_id:item.category_id
+					}
+				})
+				return data
+			}
 		},
 		methods: {
 			// 初始化
@@ -160,10 +187,33 @@
 					this.layout.hideLoading()
 				})
 			},
+			nodeDragEnd(...options){
+				// 被拖拽节点对应的数据
+				let item = options[0].data
+				// 结束拖拽时最后进入的节点数据
+				let obj = options[1].data
+				if (obj) {
+					if (options[2]=== 'before' || options[2] === 'after') {
+						item.category_id = obj.category_id
+					} else {
+						item.category_id = obj.id
+					}
+				}
+			},
 			// 拖拽
 			nodeDrop(...options) { //扩展运算里面的参数
-				console.log(options[0].data) // 排序后第一个
-				console.log(options[1].data) // 排序后第二个
+				this.layout.showLoading()
+				this.axios.post('/admin/category/sort',{
+					sortdata:JSON.stringify(this.sortData)
+				},{
+					token:true
+				}).then(res=>{
+					this.__init()
+					this.layout.hideLoading()
+				}).catch(err=>{
+					this.layout.hideLoading()
+				})
+				
 			},
 			// 创建顶级分类
 			createTop() {

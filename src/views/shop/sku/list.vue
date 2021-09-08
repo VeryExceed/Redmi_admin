@@ -16,7 +16,7 @@
 
 			<el-table-column prop="name" label="规格名称" align="center">
 			</el-table-column>
-			<el-table-column prop="value" label="规格值" align="center" width="380">
+			<el-table-column prop="default" label="规格值" align="center" width="380">
 			</el-table-column>
 			<el-table-column prop="order" label="排序" align="center">
 			</el-table-column>
@@ -41,8 +41,14 @@
 			style="bottom: 0;left: 200px;right: 0;z-index: 100;">
 			<!-- 底部 -->
 			<div style="flex: 1;" class="px-2">
-				<el-pagination :current-page="currentPage" :page-sizes="[100, 200, 300, 400]" :page-size="100"
-					layout="total, sizes, prev, pager, next, jumper" :total="400">
+				<el-pagination 
+				:current-page="page.current" 
+				:page-sizes="page.sizes" 
+				:page-size="page.size"
+				layout="total, sizes, prev, pager, next, jumper" 
+				:total="page.total"
+				@size-change="handleSizeChange"
+				@current-change="handleCurrentChange">
 				</el-pagination>
 			</div>
 		</el-footer>
@@ -69,8 +75,8 @@
 						<el-radio :label="2" border>图片</el-radio>
 					</el-radio-group>
 				</el-form-item>
-				<el-form-item label="规格值" prop="value">
-					<el-input type="textarea" v-model="form.value" :rows="3" placeholder="一行为一个规格项，多个规格项用换行输入">
+				<el-form-item label="规格值" prop="default">
+					<el-input type="textarea" v-model="form.default" :rows="3" placeholder="一行为一个规格项，多个规格项用换行输入">
 					</el-input>
 				</el-form-item>
 			</el-form>
@@ -86,48 +92,19 @@
 <script>
 	import buttomnSearch from "@/components/common/buttomn-search.vue"
 	export default {
+		inject: ['layout'],
 		components: {
 			buttomnSearch
 		},
 		data() {
 			return {
-				tableData: [{
-					id:1,
-					name:"颜色1",
-					value:"棕色,蓝色",
-					order:50,
-					status:1,
-					type:0
-				},{
-					id:2,
-					name:"颜色2",
-					value:"棕色,蓝色",
-					order:50,
-					status:1,
-					type:0
-				},{
-					id:3,
-					name:"颜色3",
-					value:"棕色,蓝色",
-					order:50,
-					status:1,
-					type:0
-				},{
-					id:4,
-					name:"颜色4",
-					value:"棕色,蓝色",
-					order:50,
-					status:1,
-					type:0
-				},{
-					id:5,
-					name:"颜色5",
-					value:"棕色,蓝色",
-					order:50,
-					status:1,
-					type:0
-				}],
-				currentPage: 1,
+				page: {
+					current: 1,
+					sizes: [10, 20, 50, 100],
+					size: 10,
+					total: 0
+				},
+				tableData: [],
 				multipleSelection: [],
 				createModel: false,
 				editIndex: -1,
@@ -136,7 +113,7 @@
 					order: 50,
 					status: 1,
 					type: 0,
-					value: ''
+					default: ''
 				},
 				rules: {
 					name: [{
@@ -144,7 +121,7 @@
 						message: "规格名称不能为空",
 						trigger: 'blur',
 					}],
-					value: [{
+					default: [{
 						required: true,
 						message: "规格值不能为空",
 						trigger: 'blur',
@@ -153,23 +130,38 @@
 			}
 		},
 		created() {
-
+			this.getList()
 		},
 		methods: {
+			getList() {
+				this.layout.showLoading()
+				let url = `/admin/skus/${this.page.current}?limit=${this.page.size}`
+				this.axios.get(url, {
+					token: true
+				}).then(res => {
+					let data = res.data.data
+					console.log(data)
+					this.page.total = data.totalCount
+					this.tableData = data.list
+					this.layout.hideLoading()
+				}).catch(err => {
+					this.layout.hideLoading()
+				})
+			},
 			// 批量删除
-			deleteAll(){
-				if (this.multipleSelection.length === 0){
-					return 
+			deleteAll() {
+				if (this.multipleSelection.length === 0) {
+					return
 				}
 				this.$confirm('是否要批量删除?', '提示', {
 					confirmButtonText: '删除',
 					cancelButtonText: '取消',
 					type: 'warning'
 				}).then(() => {
-					this.multipleSelection.forEach(item=>{
-						let index = this.tableData.findIndex(v=> v.id === item.id)
+					this.multipleSelection.forEach(item => {
+						let index = this.tableData.findIndex(v => v.id === item.id)
 						if (index !== -1) {
-							this.tableData.splice(index,1)
+							this.tableData.splice(index, 1)
 						}
 					})
 					this.multipleSelection = []
@@ -190,7 +182,7 @@
 						order: 50,
 						status: 1,
 						type: 0,
-						value: ''
+						default: ''
 					}
 					this.editIndex = -1
 				} else {
@@ -200,7 +192,7 @@
 						order: e.row.order,
 						status: e.row.status,
 						type: e.row.type,
-						value: e.row.value.replace(/,/g, '\n')
+						value: e.row.default.replace(/,/g, '\n')
 					}
 					this.editIndex = e.$index
 				}
@@ -213,34 +205,55 @@
 				this.$refs.form.validate(res => {
 					if (res) {
 						var msg = '添加'
-						this.form.value = this.form.value.replace(/\n/g, ',')
-						if (this.editIndex === -1){
-							this.tableData.unshift(this.form)
+						this.form.default = this.form.default.replace(/\n/g, ',')
+						if (this.editIndex === -1) {
+							// 添加
+							this.layout.showLoading()
+							this.axios.post('/admin/skus',this.form,{
+								token:true
+							}).then(res=>{
+								this.$message({
+									message:msg+ '成功',
+									type:'success'
+								})
+								this.getList()
+								this.layout.hideLoading()
+							}).catch(err=>{
+								this.layout.hideLoading()
+							})
 						} else {
 							let item = this.tableData[this.editIndex]
 							item.name = this.form.name
-							item.value  = this.form.value
+							item.default = this.form.default
 							item.status = this.form.status
 							item.type = this.form.type
 							item.order = this.form.order
-							msg ='修改'
+							msg = '修改'
 						}
 						// 关闭模态框
 						this.createModel = false
-						this.$message({
-							message: msg + '成功',
-							type: 'success'
-						});
 					}
 				})
 			},
 			// 修改状态
 			changeStatus(item) {
 				// 请求服务端修改状态
-				item.status = !item.status
-				this.$message({
-					message: item.status ? '启用' : '禁用',
-					type: 'success'
+				let status = item.status === 1 ? 0 : 1
+				let msg = status === 1 ? '启用' : '禁用'
+				this.layout.showLoading()
+				this.axios.post('/admin/skus/'+item.id+'/update_status',{
+					status:status
+				},{
+					token:true
+				}).then(res=>{
+					item.status = status
+					this.$message({
+						message:msg + '成功',
+						type:'success'
+					})
+					this.layout.hideLoading()
+				}).catch(err=>{
+					this.layout.hideLoading()
 				})
 			},
 			// 选中
@@ -260,6 +273,16 @@
 						type: 'success'
 					});
 				})
+			},
+			handleSizeChange(val) {
+				console.log(`每页 ${val} 条`);
+				this.page.size = val
+				this.getList()
+			},
+			handleCurrentChange(val) {
+				console.log(`当前页: ${val}`);
+				this.page.current = val
+				this.getList()
 			}
 
 		}

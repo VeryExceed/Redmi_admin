@@ -31,7 +31,7 @@
 				<template slot-scope="scope">
 					<el-button-group>
 						<el-button type="primary" size="mini" plain @click="openModel(scope)">修改</el-button>
-						<el-button type="danger" size="mini" plain @click="deleteItem(scope)">删除</el-button>
+						<el-button type="danger" size="mini" plain @click="deleteItem(scope.row)">删除</el-button>
 					</el-button-group>
 				</template>
 			</el-table-column>
@@ -53,7 +53,7 @@
 			</div>
 		</el-footer>
 		<!-- 新增/修改模态框 -->
-		<el-dialog title="添加规格" :visible.sync="createModel" top="10vh">
+		<el-dialog :title="editIndex > -1 ? '修改规格' : '添加规格'" :visible.sync="createModel" top="10vh">
 			<!-- 表单内容 -->
 			<el-form :rules="rules" ref="form" :model="form" label-width="80px">
 				<el-form-item label="规格名称" prop="name">
@@ -129,6 +129,13 @@
 				}
 			}
 		},
+		computed: {
+			ids() {
+				return this.multipleSelection.map(item=>{
+					return item.id
+				})
+			}
+		},
 		created() {
 			this.getList()
 		},
@@ -150,25 +157,33 @@
 			},
 			// 批量删除
 			deleteAll() {
-				if (this.multipleSelection.length === 0) {
-					return
+				if (this.ids.length === 0) {
+					return this.$message({
+						message:'请先选中需要删除的消息',
+						type:'error'
+					})
 				}
 				this.$confirm('是否要批量删除?', '提示', {
 					confirmButtonText: '删除',
 					cancelButtonText: '取消',
 					type: 'warning'
 				}).then(() => {
-					this.multipleSelection.forEach(item => {
-						let index = this.tableData.findIndex(v => v.id === item.id)
-						if (index !== -1) {
-							this.tableData.splice(index, 1)
-						}
+					this.layout.showLoading()
+					this.axios.post('/admin/skus/delete_all',{
+						ids:this.ids
+					},{
+						token:true
+					}).then(res=>{
+						this.multipleSelection = []
+						this.$message({
+							message: '删除成功',
+							type: 'success'
+						});
+						this.getList()
+						this.layout.hideLoading()
+					}).catch(err=>{
+						this.layout.hideLoading()
 					})
-					this.multipleSelection = []
-					this.$message({
-						message: '删除成功',
-						type: 'success'
-					});
 				})
 			},
 			// 打开模态框
@@ -223,12 +238,21 @@
 							})
 						} else {
 							let item = this.tableData[this.editIndex]
-							item.name = this.form.name
-							item.default = this.form.default
-							item.status = this.form.status
-							item.type = this.form.type
-							item.order = this.form.order
 							msg = '修改'
+							this.layout.showLoading()
+							this.axios.post('/admin/skus/'+item.id,this.form,{
+								token:true
+							}).then(res=>{
+								this.$message({
+									message:msg+ '成功',
+									type:'success'
+								})
+								this.getList()
+								this.layout.hideLoading()
+							}).catch(err=>{
+								this.layout.hideLoading()
+							})
+							
 						}
 						// 关闭模态框
 						this.createModel = false
@@ -261,17 +285,25 @@
 				this.multipleSelection = val;
 			},
 			// 删除单个
-			deleteItem(scope) {
+			deleteItem(item){
 				this.$confirm('是否要删除该规格?', '提示', {
 					confirmButtonText: '删除',
 					cancelButtonText: '取消',
 					type: 'warning'
 				}).then(() => {
-					this.tableData.splice(scope.$index, 1)
-					this.$message({
-						message: '删除成功',
-						type: 'success'
-					});
+					this.layout.showLoading()
+					this.axios.post('/admin/skus/'+item.id+'/delete',{},{
+						token:true
+					}).then(res=>{
+						this.$message({
+							message: '删除成功',
+							type: 'success'
+						});
+						this.getList()
+						this.layout.hideLoading()
+					}).catch(err=>{
+						this.layout.hideLoading()
+					})
 				})
 			},
 			handleSizeChange(val) {

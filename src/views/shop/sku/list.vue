@@ -91,21 +91,17 @@
 
 <script>
 	import buttomnSearch from "@/components/common/buttomn-search.vue"
+	import common from "@/common/mixins/common.js"
 	export default {
 		inject: ['layout'],
+		mixins:[common],
 		components: {
 			buttomnSearch
 		},
 		data() {
 			return {
-				page: {
-					current: 1,
-					sizes: [10, 20, 50, 100],
-					size: 10,
-					total: 0
-				},
+				preUrl:'skus',
 				tableData: [],
-				multipleSelection: [],
 				createModel: false,
 				editIndex: -1,
 				form: {
@@ -136,25 +132,8 @@
 				})
 			}
 		},
-		created() {
-			this.getList()
-		},
 		methods: {
-			getList() {
-				this.layout.showLoading()
-				let url = `/admin/skus/${this.page.current}?limit=${this.page.size}`
-				this.axios.get(url, {
-					token: true
-				}).then(res => {
-					let data = res.data.data
-					console.log(data)
-					this.page.total = data.totalCount
-					this.tableData = data.list
-					this.layout.hideLoading()
-				}).catch(err => {
-					this.layout.hideLoading()
-				})
-			},
+			
 			// 批量删除
 			deleteAll() {
 				if (this.ids.length === 0) {
@@ -207,7 +186,7 @@
 						order: e.row.order,
 						status: e.row.status,
 						type: e.row.type,
-						value: e.row.default.replace(/,/g, '\n')
+						default: e.row.default.replace(/,/g, '\n')
 					}
 					this.editIndex = e.$index
 				}

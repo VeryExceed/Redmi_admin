@@ -2,10 +2,6 @@
 	<div class="bg-white px-3" style="margin: -20px;margin-top: -1rem; margin-bottom: 0!important;">
 
 		<buttomn-search ref="buttonSearch" class="pt-3" @search="searchEvent" placeholder="要搜索的商品名称">
-			<!-- 左边 -->
-			<template #left>
-				<el-button type="danger" size="mini" @click="deleteAll()">批量删除</el-button>
-			</template>
 			<!-- 高级搜索表单 -->
 			<template #form>
 				<el-form inline ref="form" :model="form" label-width="80px">
@@ -31,35 +27,37 @@
 			</template>
 		</buttomn-search>
 
-		<el-table border class="mt-3" :data="tableData" style="width: 100%" @selection-change="handleSelectionChange">
-			<el-table-column type="selection" width="45" align="center">
-			</el-table-column>
+		<el-table border class="mt-3" :data="tableData" style="width: 100%">
 
 			<el-table-column type="expand">
-				<template slot-scope="props">
+				<template slot-scope="scope">
 					<div class="media">
 						<img class="mr-3"
-							src="https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=4100987808,2324741924&fm=27&gp=0.jpg"
+							:src="scope.row.user.avatar"
 							alt="Generic placeholder image" style="height: 70px;width: 70px;border-radius: 100%;">
 						<div class="media-body">
-							<h6 class="mt-0 d-flex">用户名2
-								<small>2019-07-23 14:15:17</small>
-								<el-button class="ml-auto" size="mini" type="danger">删除</el-button>
+							<h6 class="mt-0 d-flex">{{scope.row.user.username}}
+								<small>{{scope.row.review_time}}</small>
+								<!-- <el-button class="ml-auto" size="mini" type="danger">删除</el-button> -->
 							</h6>
-
-							<div class="media mt-3">
-								<a class="pr-3" href="#">
-									<img src="https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=4100987808,2324741924&fm=27&gp=0.jpg"
-										alt="Generic placeholder image"
-										style="height: 70px;width: 70px;border-radius: 100%;">
-								</a>
+							{{scope.row.review.data}}
+							<div class="py-2">
+								<img v-for="(item,index) in scope.row.review.image" :key="index" :src="item" style="max-width: 100px;max-height: 100px;" >
+							</div>
+							<div v-if="scope.row.extra">
+								
+							
+							<div class="media mt-3 bg-light p-2 rounded" v-for="(item,index) in scope.row.extra"
+				  :key="index">
+								
 								<div class="media-body">
 									<h6 class="mt-0 d-flex">
-										客服一 <small>2019-07-23 14:15:17</small>
-										<el-button class="ml-auto" type="danger" size="mini">删除</el-button>
+										客服
+										<!-- <el-button class="ml-auto" type="danger" size="mini">删除</el-button> -->
 									</h6>
-									回复内容
+									{{item.data}}
 								</div>
+							</div>
 							</div>
 						</div>
 					</div>
@@ -70,9 +68,9 @@
 			<el-table-column label="商品" width="380">
 				<template slot-scope="scope">
 					<div class="media">
-						<img class="mr-3" :src="scope.row.goods.cover" style="width: 60px;height: 60px;">
+						<img class="mr-3" :src="scope.row.review.image" style="width: 60px;height: 60px;">
 						<div class="media-body">
-							<p class="mt-0">{{scope.row.goods.title}}</p>
+							<p class="mt-0">{{scope.row.review.data}}</p>
 						</div>
 					</div>
 				</template>
@@ -80,20 +78,25 @@
 			<el-table-column label="评价信息" width="250">
 				<template slot-scope="scope">
 					<div class="d-flex flex-column">
-						<p>用户名：{{scope.row.username}}</p>
-						<p>评分: <el-rate v-model="scope.row.star" disabled show-score text-color="#ff9900"
+						<p>用户名：{{scope.row.user.username}}</p>
+						<p>评分: <el-rate v-model="scope.row.rating" disabled show-score text-color="#ff9900"
 								score-template="{value}">
 							</el-rate>
 						</p>
 					</div>
 				</template>
 			</el-table-column>
-			<el-table-column prop="create_time" label="评价时间" align="center">
+			<el-table-column prop="review_time" label="评价时间" align="center">
 			
 			</el-table-column>
 			<el-table-column label="是否显示" align="center" width="150">
 				<template slot-scope="scope">
-					<el-switch v-model="scope.row.status"></el-switch>
+					<el-button
+					:type="scope.row.status ? 'success' : 'danger'" 
+					size="mini"
+					@click="changeStatus(scope.row)"
+					plain>{{scope.row.status ? '启用' : '禁用'}}
+					</el-button>
 				</template>
 			</el-table-column>
 		</el-table>
@@ -102,9 +105,15 @@
 			style="bottom: 0;left: 200px;right: 0;z-index: 100;">
 			<!-- 底部 -->
 			<div style="flex: 1;" class="px-2">
-				<el-pagination :current-page="currentPage" :page-sizes="[100, 200, 300, 400]" :page-size="100"
-					layout="total, sizes, prev, pager, next, jumper" :total="400">
-				</el-pagination>
+			<el-pagination
+			  :current-page="page.current"
+			  :page-sizes="page.sizes"
+			  :page-size="page.size"
+			  layout="total, sizes, prev, pager, next, jumper"
+			  :total="page.total"
+			  @size-change="handleSizeChange"
+			  @current-change="handleCurrentChange">
+			</el-pagination>
 			</div>
 		</el-footer>
 
@@ -114,25 +123,28 @@
 
 <script>
 	import buttomnSearch from "@/components/common/buttomn-search.vue"
+	import common from "@/common/mixins/common.js"
 	export default {
+		inject:['layout'],
+		mixins:[common],
 		components: {
 			buttomnSearch
 		},
 		data() {
 			return {
-				tableData: [{
-					id: 1,
-					goods: {
-						title: "商品标题",
-						cover: "http://static.yoshop.xany6.com/2018071718294208f086786.jpg"
-					},
-					username: "用户名",
-					star: 5,
-					create_time: "2019-07-23 14:15:17",
-					status: 1
-				}],
-				currentPage: 1,
-				multipleSelection: [],
+				preUrl:"goods_comment",
+				tableData:[],
+				// tableData: [{
+				// 	id: 1,
+				// 	goods: {
+				// 		title: "商品标题",
+				// 		cover: "http://static.yoshop.xany6.com/2018071718294208f086786.jpg"
+				// 	},
+				// 	username: "用户名",
+				// 	star: 5,
+				// 	create_time: "2019-07-23 14:15:17",
+				// 	status: 1
+				// }],
 				form: {
 					username: '',
 					type: '',
@@ -145,8 +157,14 @@
 
 		},
 		methods: {
+			getListResult(e) {
+				console.log(e.list)
+				this.tableData = e.list 
+			},
 			clearSearch() {},
-			searchEvent(e) {},
+			searchEvent(e) {
+				console.log(e)
+			},
 			// 批量删除
 			deleteAll() {
 				if (this.multipleSelection.length === 0) {

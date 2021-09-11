@@ -9,7 +9,7 @@ export default {
 				total: 0
 			},
 			multipleSelection: [],
-			loading:true
+			loading:true,
 		}
 	},
 	filters: {
@@ -66,9 +66,9 @@ export default {
 		addOrEdit(data, id = 0) {
 			this.showLoading()
 			let msg = id > 0 ? '修改' : '增加'
-			let url = id > 0 ? '/admin/'+this.preUrl +'/' + id : '/admin/skus'
+			let url = id > 0 ? '/admin/'+this.preUrl +'/' + id : '/admin/'+this.preUrl
 			// 添加
-			this.axios.post(url, this.form, {
+			this.axios.post(url,data, {
 				token: true
 			}).then(res => {
 				this.$message({

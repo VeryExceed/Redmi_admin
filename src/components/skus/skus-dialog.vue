@@ -10,6 +10,18 @@
 							:class="skuIndex === index ? 'sum-active':''" @click="changeSku(index)">{{item.name}}</li>
 					</ul>
 				</el-aside>
+				<el-footer class="border"
+				style="position: absolute;left: 0;bottom: 0; height: 50px;width: 200px; display: flex; align-items: center;justify-content: center;">
+					<el-pagination
+					  :current-page="page.current"
+					  :page-sizes="page.sizes"
+					  :page-size="page.size"
+					  layout="prev, next"
+					  :total="page.total"
+					  @size-change="handleSizeChange"
+					  @current-change="handleCurrentChange">
+					</el-pagination>
+				</el-footer>
 				<el-container>
 					<!-- 主内容 -->
 					<el-header style="position: absolute;top: 0; left: 200px; right: 0;heig
@@ -91,6 +103,7 @@
 				if (typeof this.callback === 'function') {
 					let item = this.skusList[this.skuIndex]
 					this.callback({
+						id:item.id,
 						name:item.name,
 						type:item.type,
 						list:this.chooseList

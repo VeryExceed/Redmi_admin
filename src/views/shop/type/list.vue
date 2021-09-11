@@ -73,12 +73,14 @@
 				</el-form-item>
 				<el-form-item label="关联规格">
 					<div class="d-flex">
-						<span class="sku-list-item px-3 py-2 border mr-2 rounded" style=" line-height: initial;">
-							<font>颜色</font>
-							<i class="el-icon-delete"></i>
+						<span class="sku-list-item px-3 py-2 border mr-2 rounded" style=" line-height: initial;"
+						v-for="(item,index) in form.sku_list" :key="index">
+							<font>{{item.name}}</font>
+							<i class="el-icon-delete"
+							@click="deleteFormSkuList(index)"></i>
 						</span>
-						<el-button size="mini">
-							<i class="el-icon-plus" @click="chooseSkus"></i>
+						<el-button size="mini" @click="chooseSkus">
+							<i class="el-icon-plus" ></i>
 						</el-button>
 					</div>
 				</el-form-item>
@@ -110,9 +112,9 @@
 						</el-table-column>
 						<el-table-column label="属性值">
 							<template slot-scope="scope" v-if="scope.row.type !== 'input'">
-								<el-input type="textarea" v-if="scope.row.isedit" size="mini" v-model="scope.row.value"
+								<el-input type="textarea" v-if="scope.row.isedit" size="mini" v-model="scope.row.default"
 									placeholder="一行为一个属性值，多个属性值用换行输入"></el-input>
-								<span v-else>{{scope.row.value}}</span>
+								<span v-else>{{scope.row.default}}</span>
 							</template>
 						</el-table-column>
 						<el-table-column label="操作" width="180">
@@ -187,13 +189,7 @@
 					status: 1,
 					sku_list: []
 				},
-				value_list: [{
-					order: 50,
-					name: "属性名称",
-					type: "input",
-					value: "属性值",
-					isedit: false
-				}],
+				value_list: [],
 				rules: {
 					name: [{
 						required: true,
@@ -203,8 +199,10 @@
 				}
 			}
 		},
-		created() {
-
+		computed: {
+			skus_id() {
+				return this.form.sku_list.map(item=>item.id)
+			}
 		},
 		filters: {
 			formatValue(value) {
@@ -216,6 +214,7 @@
 			getListResult(e) {
 				this.tableData = e.list.map(item=>{
 					item.value_list = item.goods_type_values
+					item.skus_list = item.skus
 					return item
 				})
 			},
@@ -259,9 +258,9 @@
 						}
 						if (item.name == '') {
 							result = result && false
-							message.push('第' + no + '属性名称为空')
+							message.push('第' + no + '属性名称不能为空')
 						}
-						if (item.type !== 'input' && item.value == '') {
+						if (item.type !== 'input' && item.default == '') {
 							result = result && false
 							message.push('第' + no + '属性值不能为空')
 						}
@@ -280,28 +279,24 @@
 						});
 					}
 					if (res) {
-						var msg = '添加'
-						if (this.editIndex === -1){
-							this.tableData.unshift({
-								...this.form,
-								value_list:[...this.value_list]
-							})
-						}else {
-							let item = this.tableData[this.editIndex]
-							item.name = this.form.name
-							item.sku_list = this.form.sku_list
-							item.status = this.form.status
-							item.type = this.form.type
-							item.order = this.form.order
-							item.value_list = this.value_list
-							msg = '修改'
+						let value_list = this.value_list.map(item=>{
+							if (item.default) {
+								item.default = item.default.replace(/\n/g,',')
+							}
+							return item 
+						})
+						let data = {
+							...this.form,
+							skus_id:this.skus_id,
+							value_list:[...value_list]
+						}
+						let id = 0
+						if (this.editIndex !== -1) {
+							id = this.tableData[this.editIndex].id 
 						}
 						// 关闭模态框
+						this.addOrEdit(data,id)
 						this.createModel = false
-						this.$message({
-							message: msg + '成功',
-							type: 'success'
-						});
 					}
 				})
 			},
@@ -326,8 +321,16 @@
 			},
 			chooseSkus(){
 				this.app.chooseSkus((e)=>{
-					console.log(e);
+					let index = this.form.sku_list.findIndex(item=>{
+						return item.id === e.id
+					})
+					if (index === -1) {
+							this.form.sku_list.push(e)
+					}
 				})
+			},
+			deleteFormSkuList(index){
+				this.form.sku_list.splice(index,1)
 			}
 
 		}

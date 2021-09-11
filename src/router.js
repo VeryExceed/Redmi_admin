@@ -16,7 +16,7 @@ let router = new Router({routes})
 router.beforeEach((to,from,next)=>{
 	// 获取token
 	let token = window.sessionStorage.getItem('token')
-	
+	let user = window.sessionStorage.getItem('user')
 	if (token){ // 已登录
 		// 防止重复登录
 		if (to.path === '/login') {
@@ -27,6 +27,14 @@ router.beforeEach((to,from,next)=>{
 		}
 		// 其他验证...
 		if (to.name !== 'error_404'){
+			// 超级管理员跳过验证
+			if (user) {
+				user = JSON.parse(user)
+				if (user.super === 1) {
+					return next()
+				}
+			}
+			// 验证
 			let rules = window.sessionStorage.getItem('rules')
 			rules = rules ? JSON.parse(rules) : []
 			

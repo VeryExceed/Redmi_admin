@@ -41,14 +41,9 @@
 			style="bottom: 0;left: 200px;right: 0;z-index: 100;">
 			<!-- 底部 -->
 			<div style="flex: 1;" class="px-2">
-				<el-pagination 
-				:current-page="page.current" 
-				:page-sizes="page.sizes" 
-				:page-size="page.size"
-				layout="total, sizes, prev, pager, next, jumper" 
-				:total="page.total"
-				@size-change="handleSizeChange"
-				@current-change="handleCurrentChange">
+				<el-pagination :current-page="page.current" :page-sizes="page.sizes" :page-size="page.size"
+					layout="total, sizes, prev, pager, next, jumper" :total="page.total" @size-change="handleSizeChange"
+					@current-change="handleCurrentChange">
 				</el-pagination>
 			</div>
 		</el-footer>
@@ -94,13 +89,13 @@
 	import common from "@/common/mixins/common.js"
 	export default {
 		inject: ['layout'],
-		mixins:[common],
+		mixins: [common],
 		components: {
 			buttomnSearch
 		},
 		data() {
 			return {
-				preUrl:'skus',
+				preUrl: 'skus',
 				tableData: [],
 				createModel: false,
 				editIndex: -1,
@@ -125,46 +120,12 @@
 				}
 			}
 		},
-		computed: {
-			ids() {
-				return this.multipleSelection.map(item=>{
-					return item.id
-				})
-			}
-		},
+		
 		methods: {
-			
-			// 批量删除
-			deleteAll() {
-				if (this.ids.length === 0) {
-					return this.$message({
-						message:'请先选中需要删除的消息',
-						type:'error'
-					})
-				}
-				this.$confirm('是否要批量删除?', '提示', {
-					confirmButtonText: '删除',
-					cancelButtonText: '取消',
-					type: 'warning'
-				}).then(() => {
-					this.layout.showLoading()
-					this.axios.post('/admin/skus/delete_all',{
-						ids:this.ids
-					},{
-						token:true
-					}).then(res=>{
-						this.multipleSelection = []
-						this.$message({
-							message: '删除成功',
-							type: 'success'
-						});
-						this.getList()
-						this.layout.hideLoading()
-					}).catch(err=>{
-						this.layout.hideLoading()
-					})
-				})
+			getListResult(e) {
+				this.tableData = e.list
 			},
+			
 			// 打开模态框
 			openModel(e = false) {
 				console.log(e)
@@ -198,104 +159,18 @@
 			submit() {
 				this.$refs.form.validate(res => {
 					if (res) {
-						var msg = '添加'
 						this.form.default = this.form.default.replace(/\n/g, ',')
-						if (this.editIndex === -1) {
-							// 添加
-							this.layout.showLoading()
-							this.axios.post('/admin/skus',this.form,{
-								token:true
-							}).then(res=>{
-								this.$message({
-									message:msg+ '成功',
-									type:'success'
-								})
-								this.getList()
-								this.layout.hideLoading()
-							}).catch(err=>{
-								this.layout.hideLoading()
-							})
-						} else {
-							let item = this.tableData[this.editIndex]
-							msg = '修改'
-							this.layout.showLoading()
-							this.axios.post('/admin/skus/'+item.id,this.form,{
-								token:true
-							}).then(res=>{
-								this.$message({
-									message:msg+ '成功',
-									type:'success'
-								})
-								this.getList()
-								this.layout.hideLoading()
-							}).catch(err=>{
-								this.layout.hideLoading()
-							})
-							
+						let id = 0
+						if (this.editIndex !== -1) {
+							id = this.tableData[this.editIndex].id
 						}
+						this.addOrEdit(this.form, id)
 						// 关闭模态框
 						this.createModel = false
 					}
-				})
-			},
-			// 修改状态
-			changeStatus(item) {
-				// 请求服务端修改状态
-				let status = item.status === 1 ? 0 : 1
-				let msg = status === 1 ? '启用' : '禁用'
-				this.layout.showLoading()
-				this.axios.post('/admin/skus/'+item.id+'/update_status',{
-					status:status
-				},{
-					token:true
-				}).then(res=>{
-					item.status = status
-					this.$message({
-						message:msg + '成功',
-						type:'success'
-					})
-					this.layout.hideLoading()
-				}).catch(err=>{
-					this.layout.hideLoading()
-				})
-			},
-			// 选中
-			handleSelectionChange(val) {
-				this.multipleSelection = val;
-			},
-			// 删除单个
-			deleteItem(item){
-				this.$confirm('是否要删除该规格?', '提示', {
-					confirmButtonText: '删除',
-					cancelButtonText: '取消',
-					type: 'warning'
-				}).then(() => {
-					this.layout.showLoading()
-					this.axios.post('/admin/skus/'+item.id+'/delete',{},{
-						token:true
-					}).then(res=>{
-						this.$message({
-							message: '删除成功',
-							type: 'success'
-						});
-						this.getList()
-						this.layout.hideLoading()
-					}).catch(err=>{
-						this.layout.hideLoading()
-					})
-				})
-			},
-			handleSizeChange(val) {
-				console.log(`每页 ${val} 条`);
-				this.page.size = val
-				this.getList()
-			},
-			handleCurrentChange(val) {
-				console.log(`当前页: ${val}`);
-				this.page.current = val
-				this.getList()
-			}
 
+				})
+			},
 		}
 	}
 </script>

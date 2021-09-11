@@ -38,53 +38,26 @@
 </template>
 
 <script>
+	import common from '@/common/mixins/common.js';
 	export default {
+		mixins:[common],
 		data() {
 			return {
+				preUrl:'skus',
+				loading:false,
 				createModel: false,
 				callback: false,
 				chooseList: [], // 选中的数组
 				// 数据
 				skuIndex: 0,
-				skusList: [{
-					name: "颜色",
-					type: 0,
-					list: [{
-						id: 1,
-						name: "黄色",
-						image: "",
-						color: "",
-						ischeck: false
-					}, {
-						id: 2,
-						name: "红色",
-						image: "",
-						color: "",
-						ischeck: false
-					}]
-				}, {
-					name: "尺寸",
-					type: 0,
-					list: [{
-						id: 3,
-						name: "XL",
-						image: "",
-						color: "",
-						ischeck: false
-					}, {
-						id: 4,
-						name: "XXL",
-						image: "",
-						color: "",
-						ischeck: false
-					}]
-				}]
+				skusList:[]
 			}
 		},
 		computed: {
 			// 当前规格下的规格属性列表
 			skuItems() {
-				return this.skusList[this.skuIndex].list
+				let item = this.skusList[this.skuIndex]
+				return item ? item.list : []
 			},
 			// 是否全选
 			isChooseAll(){
@@ -92,6 +65,21 @@
 			}
 		},
 		methods: {
+			getListResult(e) {
+				console.log(e.list)
+				this.skusList = e.list.map(item=>{
+					let list = item.default.split(',')
+					item.list = list.map(name =>{
+						return {
+							name:name,
+							image:"",
+							color:"",
+							ischeck:false
+						}
+					})
+					return item 
+				})
+			},
 			// 打开弹出层
 			chooseSkus(callback) {
 				this.callback = callback

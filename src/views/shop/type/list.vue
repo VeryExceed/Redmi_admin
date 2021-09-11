@@ -34,7 +34,7 @@
 				<template slot-scope="scope">
 					<el-button-group>
 						<el-button type="primary" size="mini" plain @click="openModel(scope)">修改</el-button>
-						<el-button type="danger" size="mini" plain @click="deleteItem(scope)">删除</el-button>
+						<el-button type="danger" size="mini" plain @click="deleteItem(scope.row)">删除</el-button>
 					</el-button-group>
 				</template>
 			</el-table-column>
@@ -44,9 +44,15 @@
 			style="bottom: 0;left: 200px;right: 0;z-index: 100;">
 			<!-- 底部 -->
 			<div style="flex: 1;" class="px-2">
-				<el-pagination :current-page="currentPage" :page-sizes="[100, 200, 300, 400]" :page-size="100"
-					layout="total, sizes, prev, pager, next, jumper" :total="400">
-				</el-pagination>
+			<el-pagination
+			  :current-page="page.current"
+			  :page-sizes="page.sizes"
+			  :page-size="page.size"
+			  layout="total, sizes, prev, pager, next, jumper"
+			  :total="page.total"
+			  @size-change="handleSizeChange"
+			  @current-change="handleCurrentChange">
+			</el-pagination>
 			</div>
 		</el-footer>
 		<!-- 新增/修改模态框 -->
@@ -72,7 +78,7 @@
 							<i class="el-icon-delete"></i>
 						</span>
 						<el-button size="mini">
-							<i class="el-icon-plus"></i>
+							<i class="el-icon-plus" @click="chooseSkus"></i>
 						</el-button>
 					</div>
 				</el-form-item>
@@ -134,38 +140,43 @@
 
 <script>
 	import buttomnSearch from "@/components/common/buttomn-search.vue"
+	import common from '@/common/mixins/common.js';
 	export default {
+		inject:['layout','app'],
+		mixins:[common],
 		components: {
 			buttomnSearch
 		},
 		data() {
 			return {
-				tableData: [{
-					id: 1,
-					name: "鞋子",
-					order: 50,
-					status: 1,
-					sku_list: [{
-							id: 1,
-							name: "颜色"
-						},
-						{
-							id: 2,
-							name: "尺寸"
-						}
-					],
-					value_list: [{
-						order: 50,
-						name: "特性",
-						type: 'input',
-						value: ""
-					}, {
-						order: 50,
-						name: "前置摄像机",
-						type: 'input',
-						value: ""
-					}]
-				}],
+				preUrl:"goods_type",
+				tableData:[],
+				// tableData: [{
+				// 	id: 1,
+				// 	name: "鞋子",
+				// 	order: 50,
+				// 	status: 1,
+				// 	sku_list: [{
+				// 			id: 1,
+				// 			name: "颜色"
+				// 		},
+				// 		{
+				// 			id: 2,
+				// 			name: "尺寸"
+				// 		}
+				// 	],
+				// 	value_list: [{
+				// 		order: 50,
+				// 		name: "特性",
+				// 		type: 'input',
+				// 		value: ""
+				// 	}, {
+				// 		order: 50,
+				// 		name: "前置摄像机",
+				// 		type: 'input',
+				// 		value: ""
+				// 	}]
+				// }],
 				currentPage: 1,
 				multipleSelection: [],
 				createModel: false,
@@ -202,27 +213,10 @@
 			}
 		},
 		methods: {
-			// 批量删除
-			deleteAll() {
-				if (this.multipleSelection.length === 0) {
-					return
-				}
-				this.$confirm('是否要批量删除?', '提示', {
-					confirmButtonText: '删除',
-					cancelButtonText: '取消',
-					type: 'warning'
-				}).then(() => {
-					this.multipleSelection.forEach(item => {
-						let index = this.tableData.findIndex(v => v.id === item.id)
-						if (index !== -1) {
-							this.tableData.splice(index, 1)
-						}
-					})
-					this.multipleSelection = []
-					this.$message({
-						message: '删除成功',
-						type: 'success'
-					});
+			getListResult(e) {
+				this.tableData = e.list.map(item=>{
+					item.value_list = item.goods_type_values
+					return item
 				})
 			},
 			// 打开模态框
@@ -311,33 +305,7 @@
 					}
 				})
 			},
-			// 修改状态
-			changeStatus(item) {
-				// 请求服务端修改状态
-				item.status = !item.status
-				this.$message({
-					message: item.status ? '启用' : '禁用',
-					type: 'success'
-				})
-			},
-			// 选中
-			handleSelectionChange(val) {
-				this.multipleSelection = val;
-			},
-			// 删除单个
-			deleteItem(scope) {
-				this.$confirm('是否要删除该规格?', '提示', {
-					confirmButtonText: '删除',
-					cancelButtonText: '取消',
-					type: 'warning'
-				}).then(() => {
-					this.tableData.splice(scope.$index, 1)
-					this.$message({
-						message: '删除成功',
-						type: 'success'
-					});
-				})
-			},
+			
 			// 添加属性
 			addValue() {
 				this.value_list.push({
@@ -355,6 +323,11 @@
 			// 删除属性
 			delRow(index) {
 				this.value_list.splice(index, 1)
+			},
+			chooseSkus(){
+				this.app.chooseSkus((e)=>{
+					console.log(e);
+				})
 			}
 
 		}

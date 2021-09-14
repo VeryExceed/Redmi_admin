@@ -1,63 +1,72 @@
 <template>
 	<div class="bg-white px-3" style="margin: -20px;margin-top: -1rem; margin-bottom: 0!important;">
 
-		<buttomn-search ref="buttonSearch" class="pt-3" @search="searchEvent" placeholder="要搜索的商品名称">
-			<!-- 高级搜索表单 -->
-			<template #form>
-				<el-form inline ref="form" :model="form" label-width="80px">
-					<el-form-item label="评价用户" class="mb-0">
-						<el-input v-model="form.username" placeholder="商品名称" size="mini"></el-input>
-					</el-form-item>
-					<el-form-item label="评价类型" class="mb-0">
-						<el-select v-model="form.type" size="mini" placeholder="评价类型">
-							<el-option label="区域一" value="shanghai"></el-option>
-							<el-option label="区域一" value="shanghai"></el-option>
-						</el-select>
-					</el-form-item>
-					<el-form-item label="发布时间" class="mb-0">
-						<el-date-picker v-model="form.time" type="datetimerange" size="small" range-separator="至"
-							start-placeholder="开始日期" end-placeholder="结束日期">
-						</el-date-picker>
-					</el-form-item>
-					<el-form-item class="mb-0">
-						<el-button type="info" size="mini" @click="searchEvent">搜索</el-button>
-						<el-button size="mini" @click="clearSearch">清空筛选条件</el-button>
-					</el-form-item>
-				</el-form>
-			</template>
-		</buttomn-search>
+		<buttomn-search 
+		ref="buttonSearch" 
+		class="pt-3" 
+		@search="searchEvent" 
+		placeholder="要搜索的商品名称"
+		:showSuperSearch="false"></buttomn-search>
 
 		<el-table border class="mt-3" :data="tableData" style="width: 100%">
 
 			<el-table-column type="expand">
 				<template slot-scope="scope">
 					<div class="media">
-						<img class="mr-3"
-							:src="scope.row.user.avatar"
-							alt="Generic placeholder image" style="height: 70px;width: 70px;border-radius: 100%;">
+						<img class="mr-3" :src="scope.row.user.avatar" alt="Generic placeholder image"
+							style="height: 70px;width: 70px;border-radius: 100%;">
 						<div class="media-body">
 							<h6 class="mt-0 d-flex">{{scope.row.user.username}}
 								<small>{{scope.row.review_time}}</small>
-								<!-- <el-button class="ml-auto" size="mini" type="danger">删除</el-button> -->
+								<el-button 
+								v-if="!scope.row.extra && !textareaEdit"
+								class="ml-auto" 
+								size="mini" 
+								type="info"
+								@click="textareaEdit = true">回复</el-button>
 							</h6>
 							{{scope.row.review.data}}
 							<div class="py-2">
-								<img v-for="(item,index) in scope.row.review.image" :key="index" :src="item" style="max-width: 100px;max-height: 100px;" >
+								<img 
+								v-for="(item,index) in scope.row.review.image" 
+								:key="index" 
+								:src="item"
+								style="max-width: 100px;max-height: 100px;">
 							</div>
-							<div v-if="scope.row.extra">
-								
-							
-							<div class="media mt-3 bg-light p-2 rounded" v-for="(item,index) in scope.row.extra"
-				  :key="index">
-								
-								<div class="media-body">
-									<h6 class="mt-0 d-flex">
-										客服
-										<!-- <el-button class="ml-auto" type="danger" size="mini">删除</el-button> -->
-									</h6>
-									{{item.data}}
+							<div v-if="textareaEdit">
+								<el-input 
+								:rows="2"
+								type="textarea"
+								v-model="textarea"
+								placeholder="请输入评价内容">
+								</el-input>
+								<div class="py-2">
+									<el-button 
+									class="ml-auto mr-2"
+									size="mini"
+									type="success" 
+									@click="review(scope.row.id)"
+									>回复</el-button>
+									<el-button 
+									class="ml-auto"
+									size="mini"
+									type="info" 
+									@click="closeTextarea"
+									>取消</el-button>
 								</div>
 							</div>
+							<div v-if="scope.row.extra">
+								<div class="media mt-3 bg-light p-2 rounded" v-for="(item,index) in scope.row.extra"
+									:key="index">
+									<div class="media-body">
+										<h6 class="mt-0 d-flex">
+											客服
+											<el-button v-if="!textareaEdit" class="ml-auto" type="info" size="mini"
+												@click="openTextarea(item.data)">修改</el-button>
+										</h6>
+										{{item.data}}
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -87,15 +96,12 @@
 				</template>
 			</el-table-column>
 			<el-table-column prop="review_time" label="评价时间" align="center">
-			
+
 			</el-table-column>
 			<el-table-column label="是否显示" align="center" width="150">
 				<template slot-scope="scope">
-					<el-button
-					:type="scope.row.status ? 'success' : 'danger'" 
-					size="mini"
-					@click="changeStatus(scope.row)"
-					plain>{{scope.row.status ? '启用' : '禁用'}}
+					<el-button :type="scope.row.status ? 'success' : 'danger'" size="mini"
+						@click="changeStatus(scope.row)" plain>{{scope.row.status ? '启用' : '禁用'}}
 					</el-button>
 				</template>
 			</el-table-column>
@@ -105,15 +111,10 @@
 			style="bottom: 0;left: 200px;right: 0;z-index: 100;">
 			<!-- 底部 -->
 			<div style="flex: 1;" class="px-2">
-			<el-pagination
-			  :current-page="page.current"
-			  :page-sizes="page.sizes"
-			  :page-size="page.size"
-			  layout="total, sizes, prev, pager, next, jumper"
-			  :total="page.total"
-			  @size-change="handleSizeChange"
-			  @current-change="handleCurrentChange">
-			</el-pagination>
+				<el-pagination :current-page="page.current" :page-sizes="page.sizes" :page-size="page.size"
+					layout="total, sizes, prev, pager, next, jumper" :total="page.total" @size-change="handleSizeChange"
+					@current-change="handleCurrentChange">
+				</el-pagination>
 			</div>
 		</el-footer>
 
@@ -125,75 +126,66 @@
 	import buttomnSearch from "@/components/common/buttomn-search.vue"
 	import common from "@/common/mixins/common.js"
 	export default {
-		inject:['layout'],
-		mixins:[common],
+		inject: ['layout'],
+		mixins: [common],
 		components: {
 			buttomnSearch
 		},
 		data() {
 			return {
-				preUrl:"goods_comment",
-				tableData:[],
-				// tableData: [{
-				// 	id: 1,
-				// 	goods: {
-				// 		title: "商品标题",
-				// 		cover: "http://static.yoshop.xany6.com/2018071718294208f086786.jpg"
-				// 	},
-				// 	username: "用户名",
-				// 	star: 5,
-				// 	create_time: "2019-07-23 14:15:17",
-				// 	status: 1
-				// }],
-				form: {
-					username: '',
-					type: '',
-					time: ''
-				},
+				preUrl: "goods_comment",
+				textarea: '',
+				textareaEdit: false,
+				tableData: [],
+				title:''
 
 			}
-		},
-		created() {
-
 		},
 		methods: {
-			getListResult(e) {
-				console.log(e.list)
-				this.tableData = e.list 
+			openTextarea(data){
+				this.textarea = data
+				this.textareaEdit = true 
 			},
-			clearSearch() {},
-			searchEvent(e) {
-				console.log(e)
-			},
-			// 批量删除
-			deleteAll() {
-				if (this.multipleSelection.length === 0) {
-					return
+			review(id) {
+				if (this.textarea== '') {
+					return this.$message({
+						message: '回复内容不能为空',
+						type: 'error'
+					});
 				}
-				this.$confirm('是否要批量删除?', '提示', {
-					confirmButtonText: '删除',
-					cancelButtonText: '取消',
-					type: 'warning'
-				}).then(() => {
-					this.multipleSelection.forEach(item => {
-						let index = this.tableData.findIndex(v => v.id === item.id)
-						if (index !== -1) {
-							this.tableData.splice(index, 1)
-						}
-					})
-					this.multipleSelection = []
+				this.layout.showLoading()
+				this.axios.post('/admin/goods_comment/review/'+id,{
+					data:this.textarea
+				},{
+					token:true
+				}).then(ers=>{
+					this.closeTextarea()
 					this.$message({
-						message: '删除成功',
+						message: '回复成功',
 						type: 'success'
 					});
+					this.getList()
+					this.layout.hideLoading()
+				}).catch(err=>{
+					this.layout.hideLoading()
 				})
 			},
-
-
-			// 选中
-			handleSelectionChange(val) {
-				this.multipleSelection = val;
-			}
+			closeTextarea(){
+				this.textarea = ''
+				this.textareaEdit = false 
+			},
+			getListResult(e) {
+				console.log(e.list)
+				this.tableData = e.list
+			},
+			// 获取请求列表分页url
+			getListUrl() {
+				return `/admin/${this.preUrl}/${this.page.current}?limit=${this.page.size}&title=${this.title}`
+			},
+			searchEvent(e) {
+				this.title = e
+				this.getList()
+			},
 
 		}
 	}

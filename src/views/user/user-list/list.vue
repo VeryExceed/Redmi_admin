@@ -1,10 +1,13 @@
 <template>
 	<div class="bg-white px-3" style="margin: -20px;margin-top: -1rem; margin-bottom: 0!important;">
 
-		<buttomn-search class="pt-3" placeholder="手机号/邮箱会员昵称">
+		<buttomn-search 
+		class="pt-3" 
+		placeholder="手机号/邮箱会员昵称" 
+		@search="searchEvent">
 			<!-- 左边 -->
 			<template #left>
-				<el-button type="success" size="mini" @click="openModel(false)">添加规格</el-button>
+				<el-button type="success" size="mini" @click="openModel(false)">添加会员</el-button>
 			</template>
 
 			<template #form>
@@ -13,15 +16,12 @@
 						<el-input v-model="search.keyword" placeholder="手机号/邮箱/会员昵称" size="mini"></el-input>
 					</el-form-item>
 					<el-form-item label="会员等级" class="mb-0">
-						<el-select v-model="search.group_id" size="mini" placeholder="请选择会员等级">
-							<el-option label="区域一" value="shanghai"></el-option>
-							<el-option label="区域二" value="beijing"></el-option>
+						<el-select v-model="search.user_level_id" size="mini" placeholder="请选择会员等级">
+							<el-option 
+							v-for="(item,index) in user_level" :key="index"
+							:label="item.name" 
+							:value="item.id"></el-option>
 						</el-select>
-					</el-form-item>
-					<el-form-item label="发布时间" class="mb-0">
-						<el-date-picker size="small" v-model="search.time" type="daterange" range-separator="至"
-							start-placeholder="开始日期" end-placeholder="结束日期">
-						</el-date-picker>
 					</el-form-item>
 					<el-form-item class="mb-0">
 						<el-button type="info" size="mini" @click="searchEvent">
@@ -51,20 +51,21 @@
 
 			<el-table-column label="会员等级" align="center">
 				<template slot-scope="scope">
-					{{scope.row.level.name}}
+					{{scope.row.user_level.name}}
 				</template>
 			</el-table-column>
 
 			<el-table-column label="登录注册" align="center" width="250">
 				<template slot-scope="scope">
 					<div>注册时间 : {{scope.row.create_time}}</div>
-					<div>最后登录 : {{scope.row.update_time}}</div>
+					<div>最后登录 : {{scope.row.last_login_time}}</div>
 				</template>
 			</el-table-column>
 
 			<el-table-column prop="status" label="状态" align="center">
 				<template slot-scope="scope">
-					<el-switch v-model="scope.row.status" :active-value="1" :inactive-value="0"></el-switch>
+					<el-button :type="scope.row.status? 'success' : 'danger'" size="mini"
+						@click="changeStatus(scope.row)" plain>{{scope.row.status? '启用': '禁用'}}</el-button>
 				</template>
 			</el-table-column>
 
@@ -82,8 +83,9 @@
 			style="bottom: 0;left: 200px;right: 0;z-index: 100;">
 			<!-- 底部 -->
 			<div style="flex: 1;" class="px-2">
-				<el-pagination :current-page="currentPage" :page-sizes="[100, 200, 300, 400]" :page-size="100"
-					layout="total, sizes, prev, pager, next, jumper" :total="400">
+				<el-pagination :current-page="page.current" :page-sizes="page.sizes" :page-size="page.size"
+					layout="total, sizes, prev, pager, next, jumper" :total="page.total" @size-change="handleSizeChange"
+					@current-change="handleCurrentChange">
 				</el-pagination>
 			</div>
 		</el-footer>
@@ -106,7 +108,8 @@
 
 				<el-form-item label="头像">
 					<div>
-						<span v-if="!form.avatar" class="btn btn-light border mr-2" @click="chooseImage">
+						<span v-if="!form.avatar" class="btn btn-light border mr-2" 
+						@click="chooseImage">
 							<i class="el-icon-plus"></i>
 						</span>
 						<img v-else :src="form.avatar" @click="chooseImage"
@@ -114,7 +117,7 @@
 					</div>
 				</el-form-item>
 
-				<el-form-item label="会员等级" prop="value">
+				<el-form-item label="会员等级">
 					<el-select v-model="form.level_id" placeholder="请选择会员等级">
 						<el-option label="普通会员" :value="1"></el-option>
 						<el-option label="黄金会员" :value="2"></el-option>
@@ -156,33 +159,22 @@
 
 <script>
 	import buttomnSearch from "@/components/common/buttomn-search.vue"
+	import common from '@/common/mixins/common.js';
 	export default {
-		inject: ['app'],
+		inject: ['app','layout'],
+		mixins:[common],
 		components: {
 			buttomnSearch
 		},
 		data() {
 			return {
-				tableData: [{
-					id: 10,
-					username: "用户名",
-					avatar: "https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=4100987808,2324741924&fm=27&gp=0.jpg",
-					level_id: 1,
-					level: {
-						id: 1,
-						name: '普通会员'
-					},
-					create_time: "2019-07-24 15:52:56",
-					update_time: "2019-07-24 15:52:56",
-					status: 1, //启用
-				}],
-				currentPage: 1,
+				preUrl:'user',
+				tableData: [],
 				createModel: false,
 				editIndex: -1,
 				search: {
 					keyword: "",
-					group_id: 0,
-					itme: ""
+					user_level_id: 0,
 				},
 				form: {
 					username: "",
@@ -194,10 +186,16 @@
 					email: "",
 					sex: 0,
 					status: 1,
-				}
+				},
+				user_level:[]
 			}
 		},
 		methods: {
+			getListResult(e) {
+				this.tableData = e.list
+				console.log(e.list)
+				this.user_level = e.user_level
+			},
 			// 打开模态框
 			openModel(e = false) {
 				console.log(e)
@@ -265,53 +263,33 @@
 							type: 'success'
 						});
 			},
-			// 修改状态
-			changeStatus(item) {
-				// 请求服务端修改状态
-				item.status = !item.status
-				this.$message({
-					message: item.status ? '启用' : '禁用',
-					type: 'success'
-				})
-			},
-
-			// 删除单个
-			deleteItem(scope) {
-				this.$confirm('是否要删除该规格?', '提示', {
-					confirmButtonText: '删除',
-					cancelButtonText: '取消',
-					type: 'warning'
-				}).then(() => {
-					this.tableData.splice(scope.$index, 1)
-					this.$message({
-						message: '删除成功',
-						type: 'success'
-					});
-				})
-			},
 			// 清空筛选条件
 			clearSearch() {
 				this.search = {
 					keyword: "",
-					group_id: "",
-					time: "",
+					user_level_id: ""
 				}
-				this.$refs.buttonSearch[this.tabIndex].closeSuperSearch()
+			},
+			// 获取请求列表分页url
+			getListUrl() {
+				return `/admin/${this.preUrl}/${this.page.current}?limit=${this.page.size}&keyword=${this.search.keyword}&user_level_id=${this.search.user_level_id}`
 			},
 			// 搜索事件
 			searchEvent(e = false) {
 				// 简单搜索
 				if (typeof e === 'string') {
-					return console.log('简单搜索', e);
+					this.search.keyword = e
+					this.getList()
+					return
 				}
 				// 高级搜索
-				console.log('搜索事件');
+				this.getList()
 			},
 			// 搜索头像
 			chooseImage() {
 				this.app.chooseImage((res) => {
 					this.form.avatar = res[0].url
-				}, )
+				}, 1)
 			}
 
 		}

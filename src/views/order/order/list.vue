@@ -1,7 +1,9 @@
 <template>
 	<div class="bg-white px-3" style="margin: -20px;margin-top: -1rem; margin-bottom: 0!important;">
 		<el-tabs v-model="tabIndex" @tab-click="handleClick">
-			<el-tab-pane :label="tab.name" v-for="(tab,tabI) in tabbars" :key="tabI">
+			<el-tab-pane :label="tab.name"
+			 v-for="(tab,tabI) in tabbars" 
+			 :key="tabI">
 				<buttomn-search ref="buttonSearch" placeholder="要搜索的订单编号" @search="searchEvent">
 					<!-- 左边 -->
 					<template #left>
@@ -21,13 +23,9 @@
 								</el-select>
 							</el-form-item>
 							<el-form-item label="下单时间" class="mb-0">
-							   <el-date-picker
-							        v-model="form.time"
-							        type="daterange"
-							        range-separator="至"
-							        start-placeholder="开始日期"
-							        end-placeholder="结束日期">
-							      </el-date-picker>
+								<el-date-picker v-model="form.time" type="daterange" range-separator="至"
+									start-placeholder="开始日期" end-placeholder="结束日期">
+								</el-date-picker>
 							</el-form-item>
 							<el-form-item label="收货人" class="mb-0">
 								<el-input v-model="form.username" placeholder="收货人" size="mini"></el-input>
@@ -56,9 +54,7 @@
 				 总库存（200）
 				 价格(元)（1000.00）
 				 -->
-				<el-table border class="mt-3" 
-					:data="tableData[tabI].list" 
-					style="width: 100%"
+				<el-table border class="mt-3" :data="tableData" style="width: 100%"
 					@selection-change="handleSelectionChange">
 					<el-table-column type="selection" width="45" align="center">
 					</el-table-column>
@@ -74,7 +70,7 @@
 									<p class="mb-1"><small>2018080298545157</small></p>
 								</div>
 							</div>
-							
+
 							<div class="media">
 								<img class="mr-3" style="width: 60px;height: 60px;" :src="scope.row.cover">
 								<div class="media-body">
@@ -100,11 +96,11 @@
 					<el-table-column prop="status" label="支付方式" align="center">
 						<template slot-scope="scope">
 							<span class="badge badge-success">微信支付</span>
-							
+
 						</template>
 					</el-table-column>
 					<el-table-column prop="stock" label="配送方式" align="center">
-					
+
 
 					</el-table-column>
 					<el-table-column width="170" label="交易状态" align="center">
@@ -120,11 +116,11 @@
 							</div>
 						</template>
 					</el-table-column>
-	
+
 					<el-table-column label="操作" align="center" width="150">
 						<template slot-scope="scope">
-								<el-button type="primary" size="mini" plain>订单详情</el-button>
-								</el-button>
+							<el-button type="primary" size="mini" plain>订单详情</el-button>
+							</el-button>
 						</template>
 					</el-table-column>
 				</el-table>
@@ -133,8 +129,9 @@
 					style="bottom: 0;left: 200px;right: 0;z-index: 100;">
 					<!-- 底部 -->
 					<div style="flex: 1;" class="px-2">
-						<el-pagination :current-page="tableData[tabI].currentPage" :page-sizes="[100, 200, 300, 400]"
-							:page-size="100" layout="total, sizes, prev, pager, next, jumper" :total="400">
+						<el-pagination :current-page="page.current" :page-sizes="page.sizes" :page-size="page.size"
+							layout="total, sizes, prev, pager, next, jumper" :total="page.total"
+							@size-change="handleSizeChange" @current-change="handleCurrentChange">
 						</el-pagination>
 					</div>
 				</el-footer>
@@ -145,54 +142,72 @@
 
 <script>
 	import buttomnSearch from "@/components/common/buttomn-search.vue"
+	import common from '@/common/mixins/common.js';
 	export default {
+		mixins: [common],
+		inject: ['layout'],
 		components: {
 			buttomnSearch
 		},
 		data() {
 			return {
+				preUrl: "order",
 				tabIndex: 0,
 				tabbars: [{
-						name: "全部"
+						name: "全部",
+						key: "all"
 					},
 					{
-						name: "待付款"
+						name: "待付款",
+						key: "nopay"
 					},
 					{
-						name: "待发货"
+						name: "待发货",
+						key: "noship"
 					},
 					{
-						name: "已发货"
+						name: "待收货",
+						key: "shiped"
 					},
 					{
-						name: "已收货"
+						name: "已收货",
+						key: "received"
 					},
 					{
-						name: "已完成"
+						name: "已完成",
+						key: "finish"
 					},
 					{
-						name: "已关闭"
+						name: "已关闭",
+						key: "closed"
 					},
 					{
-						name: "退款中"
+						name: "退款中",
+						key: "refunding"
 					}
 				],
 				form: {
 					code: "",
 					type: "",
-					time:"",
-					username:"",
-					phone:""
+					time: "",
+					username: "",
+					phone: ""
 				},
 				tableData: [],
 				multipleSelection: []
 			}
 		},
-		created() {
-			this.__getData()
-		},
 		methods: {
-			// 生成数据
+			// 获取请求列表分页url
+			getListUrl(){
+				return `/admin/${this.preUrl}/${this.page.current}?limit=${this.page.size}&tab=${this.tab}`
+			},
+			// 处理获取列表结果
+			getListResult(e){
+				console.log(e)
+				this.tableData = e.list
+			},
+			// 生成模拟数据
 			__getData() {
 				for (let i = 0; i < this.tabbars.length; i++) {
 					this.tableData.push({
@@ -242,7 +257,7 @@
 			},
 			// 加载数据
 			handleClick(tab, event) {
-				console.log(tab.index);
+				this.getList()
 			},
 			// 搜索事件
 			searchEvent(e) {
@@ -258,10 +273,10 @@
 			clearSearch() {
 				this.form = {
 					code: "",
-					type:"",
-					time:"",
-					username:"",
-					phone:"",
+					type: "",
+					time: "",
+					username: "",
+					phone: "",
 				}
 				this.$refs.buttonSearch[this.tabIndex].closeSuperSearch()
 			}

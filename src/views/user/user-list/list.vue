@@ -118,9 +118,10 @@
 				</el-form-item>
 
 				<el-form-item label="会员等级">
-					<el-select v-model="form.level_id" placeholder="请选择会员等级">
-						<el-option label="普通会员" :value="1"></el-option>
-						<el-option label="黄金会员" :value="2"></el-option>
+					<el-select v-model="form.user_level_id" placeholder="请选择会员等级">
+						<el-option v-for="(item,index) in user_level" :key="index"
+						:label="item.name" 
+						:value="item.id"></el-option>
 					</el-select>
 				</el-form-item>
 
@@ -174,17 +175,16 @@
 				editIndex: -1,
 				search: {
 					keyword: "",
-					user_level_id: 0,
+					user_level_id: "",
 				},
 				form: {
 					username: "",
 					password: "",
 					nickname: "",
 					avatar: "",
-					level_id: 1,
+					user_level_id: 1,
 					phone: "",
 					email: "",
-					sex: 0,
 					status: 1,
 				},
 				user_level:[]
@@ -207,10 +207,9 @@
 						password: "",
 						nickname: "",
 						avatar: "",
-						level_id: 1,
+						user_level_id: 1,
 						phone: "",
 						email: "",
-						sex: 0,
 						status: 1,
 					}
 					this.editIndex = -1
@@ -221,10 +220,9 @@
 						password: "",
 						nickname: e.row.nickname,
 						avatar: e.row.avatar,
-						level_id: e.row.level_id,
+						user_level_id: e.row.user_level_id,
 						phone: e.row.phone,
 						email: e.row.email,
-						sex: e.row.sex,
 						status: e.row.status,
 					}
 					this.editIndex = e.$index
@@ -235,33 +233,13 @@
 			},
 			// 添加规格
 			submit() {
-						var msg = '添加'
-
-						if (this.editIndex === -1) {
-							this.form.level = {
-									id: 1,
-									name: '普通会员'
-								},
-								this.tableData.unshift(this.form)
-						} else {
-							let item = this.tableData[this.editIndex]
-							item.username = this.form.username,
-							item.password = this.form.password,
-							item.nickname = this.form.nickname,
-							item.avatar = this.form.avatar,
-							item.level_id = this.form.level_id,
-							item.phone = this.form.phone,
-							item.email = this.form.email,
-							item.sex = this.form.sex,
-							item.status = this.form.status,
-							msg = '修改'
+					let id = 0
+						if (this.editIndex !== -1) {
+							id = this.tableData[this.editIndex].id
 						}
+						this.addOrEdit(this.form,id)
 						// 关闭模态框
 						this.createModel = false
-						this.$message({
-							message: msg + '成功',
-							type: 'success'
-						});
 			},
 			// 清空筛选条件
 			clearSearch() {

@@ -1,7 +1,7 @@
 <template>
 	<div class="bg-white px-3" style="margin: -20px;margin-top: -1rem; margin-bottom: 0!important;">
 
-		<buttomn-search class="pt-3" placeholder="手机号/邮箱会员昵称">
+		<buttomn-search class="pt-3">
 			<!-- 左边 -->
 			<template #left>
 				<el-button type="success" size="mini" @click="openModel(false)">添加规格</el-button>
@@ -29,7 +29,7 @@
 				</template>
 			</el-table-column>
 
-			<el-table-column label="折扣率(%)" align="center" prop="discont">
+			<el-table-column label="折扣率(%)" align="center" prop="discount">
 			</el-table-column>
 
 			<el-table-column prop="level" label="等级序号" align="center">
@@ -37,7 +37,12 @@
 
 			<el-table-column label="状态" align="center" prop="status">
 				<template slot-scope="scope">
-					<el-switch v-model="scope.row.status" :active-value="1" :inactive-value="0"></el-switch>
+					<el-button
+					:type="scope.row.status ? 'success' : 'danger'" 
+					size="mini"
+					@click="changeStatus(scope.row)"
+					plain>{{scope.row.status ? '启用' : '禁用'}}
+					</el-button>
 				</template>
 			</el-table-column>
 
@@ -45,7 +50,7 @@
 				<template slot-scope="scope">
 					<el-button type="text" size="mini" @click="openModel(scope)">
 						修改</el-button>
-					<el-button type="text" size="mini" @click="deleteItem(scope)">
+					<el-button type="text" size="mini" @click="deleteItem(scope.row)">
 						删除</el-button>
 				</template>
 			</el-table-column>
@@ -56,8 +61,14 @@
 			style="bottom: 0;left: 200px;right: 0;z-index: 100;">
 			<!-- 底部 -->
 			<div style="flex: 1;" class="px-2">
-				<el-pagination :current-page="currentPage" :page-sizes="[100, 200, 300, 400]" :page-size="100"
-					layout="total, sizes, prev, pager, next, jumper" :total="400">
+				<el-pagination
+				  :current-page="page.current"
+				  :page-sizes="page.sizes"
+				  :page-size="page.size"
+				  layout="total, sizes, prev, pager, next, jumper"
+				  :total="page.total"
+				  @size-change="handleSizeChange"
+				  @current-change="handleCurrentChange">
 				</el-pagination>
 			</div>
 		</el-footer>
@@ -92,7 +103,7 @@
 				<el-form-item label="升级条件">
 					<div>
 						<small class="mr-2">累计消费满</small>
-						<el-input type="number" v-model="form.consume" placeholder="累计消费" size="mini" style="width: 25%;">
+						<el-input type="number" v-model="form.max_price" placeholder="累计消费" size="mini" style="width: 25%;">
 								<template slot="append">元</template>
 						</el-input>
 						<small class="text-secondary d-block">
@@ -101,7 +112,7 @@
 					</div>
 					<div>
 						<small class="mr-2">累计次数满</small>
-						<el-input type="number" v-model="form.times" placeholder="累计次数" size="mini" style="width: 25%;">
+						<el-input type="number" v-model="form.max_times" placeholder="累计次数" size="mini" style="width: 25%;">
 								<template slot="append">次</template>
 						</el-input>
 						<small class="text-secondary d-block">
@@ -112,7 +123,7 @@
 
 				<el-form-item label="折扣率">
 					<el-input type="number" size="mini" 
-					v-model="form.discont">
+					v-model="form.discount">
 						<template slot="append">%</template>
 						
 					</el-input>
@@ -135,36 +146,30 @@
 
 <script>
 	import buttomnSearch from "@/components/common/buttomn-search.vue"
+	import common from '@/common/mixins/common.js';
 	export default {
-		inject: ['app'],
+		inject: ['app','layout'],
+		mixins:[common],
 		components: {
 			buttomnSearch
 		},
 		data() {
 			return {
+				preUrl:"user_level",
 				level: 0,
-				tableData: [{
-					name: "普通会员",
-					consume: 100,
-					times: 10,
-					discont: 10,
-					level: 1,
-					status: 1, //启用
-					create_time: "",
-				}],
-				currentPage: 1,
+				tableData: [],
 				createModel: false,
 				editIndex: -1,
 				search: {
 					keyword: "",
 					group_id: 0,
-					itme: ""
+					time: ""
 				},
 				form: {
 					name: "",
-					consume: 0,
-					times: 0,
-					discont: 0,
+					max_price: 0,
+					max_times: 0,
+					discount: 0,
 					level: 0,
 					status: 1, //启用
 				}
@@ -174,15 +179,19 @@
 			getLevel() {
 				let arr = [{
 					name: '累计消费',
-					value: 'consume'
+					value: 'max_price'
 				}, {
 					name: '累计次数',
-					value: 'times'
+					value: 'max_times'
 				}]
 				return arr[this.level]
 			}
 		},
 		methods: {
+			getListResult(e) {
+				this.tableData = e.list
+				console.log(e)
+			},
 			// 打开模态框
 			openModel(e = false) {
 				console.log(e)
@@ -191,9 +200,9 @@
 					// 初始化表单
 					this.form = {
 						name:"",
-						consume:0,
-						times:0,
-						discont:0,
+						max_price:0,
+						max_times:0,
+						discount:0,
 						level:0,
 						status:1,//启用
 					}
@@ -202,9 +211,9 @@
 					// 修改
 					this.form = {
 						name:e.row.name,
-						consume:e.row.consume,
-						times:e.row.times,
-						discont:e.row.discont,
+						max_price:e.row.max_price,
+						max_times:e.row.max_times,
+						discount:e.row.discount,
 						level:e.row.level,
 						status:e.row.status,//启用
 					}
@@ -216,50 +225,14 @@
 			},
 			// 添加规格
 			submit() {
-				var msg = '添加'
-
-				if (this.editIndex === -1) {
-						this.tableData.unshift(this.form)
-				} else {
-					let item = this.tableData[this.editIndex]
-					item.name = this.form.name
-					item.consume = this.form.consume
-					item.times = this.form.times
-					item.discont = this.form.discont
-					item.level = this.form.level
-					item.status = this.form.status
-						msg = '修改'
+				let id = 0
+				if (this.editIndex !== -1) {
+						id = this.tableData[this.editIndex].id
 				}
+				this.addOrEdit(this.form,id)
 				// 关闭模态框
 				this.createModel = false
-				this.$message({
-					message: msg + '成功',
-					type: 'success'
-				});
-			},
-			// 修改状态
-			changeStatus(item) {
-				// 请求服务端修改状态
-				item.status = !item.status
-				this.$message({
-					message: item.status ? '启用' : '禁用',
-					type: 'success'
-				})
-			},
-
-			// 删除单个
-			deleteItem(scope) {
-				this.$confirm('是否要删除该折扣?', '提示', {
-					confirmButtonText: '删除',
-					cancelButtonText: '取消',
-					type: 'warning'
-				}).then(() => {
-					this.tableData.splice(scope.$index, 1)
-					this.$message({
-						message: '删除成功',
-						type: 'success'
-					});
-				})
+			
 			},
 			// 清空筛选条件
 			clearSearch() {
@@ -283,7 +256,7 @@
 			chooseImage() {
 				this.app.chooseImage((res) => {
 					this.form.avatar = res[0].url
-				}, )
+				}, 1)
 			}
 
 		}

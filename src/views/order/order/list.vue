@@ -4,17 +4,19 @@
 			<el-tab-pane :label="tab.name"
 			 v-for="(tab,tabI) in tabbars" 
 			 :key="tabI">
+			 </el-tab-pane>
+		</el-tabs>
 				<buttomn-search ref="buttonSearch" placeholder="要搜索的订单编号" @search="searchEvent">
 					<!-- 左边 -->
 					<template #left>
 						<el-button type="success" size="mini">导出数据</el-button>
-						<el-button type="danger" size="mini">批量删除</el-button>
+						<el-button type="danger" size="mini" @click="deleteAll">批量删除</el-button>
 					</template>
 					<!-- 高级搜索表单 -->
 					<template #form>
 						<el-form inline ref="form" :model="form" label-width="80px">
 							<el-form-item label="订单编号" class="mb-0">
-								<el-input v-model="form.code" placeholder="订单编号" size="mini"></el-input>
+								<el-input v-model="form.no" placeholder="订单编号" size="mini"></el-input>
 							</el-form-item>
 							<el-form-item label="订单状态" class="mb-0">
 								<el-select v-model="form.type" size="mini" placeholder="请选择订单状态">
@@ -63,56 +65,73 @@
 							<div class="d-flex">
 								<div style="flex: 1;">
 									<p class="mb-1">订单编号：</p>
-									<p class="mb-1"><small>2018080298545157</small></p>
+									<p class="mb-1"><small>{{scope.row.no}}</small></p>
 								</div>
 								<div style="flex: 1;">
 									<p class="mb-1">下单时间：</p>
-									<p class="mb-1"><small>2018080298545157</small></p>
+									<p class="mb-1"><small>{{scope.row.create_time}}</small></p>
 								</div>
 							</div>
 
-							<div class="media">
-								<img class="mr-3" style="width: 60px;height: 60px;" :src="scope.row.cover">
+							<div class="media border-top py-2"
+							v-for="(item,index) in scope.row.order_items" :key="index">
+								<img class="mr-3" style="width: 60px;height: 60px;"
+								:src="item.goods_item ? item.goods_item.cover : ''">
 								<div class="media-body">
-									<p class="mb-0">
-										<a class="text-primary">{{scope.row.title}}</a>
-									</p>
+								  <p class="mt-0">
+									<a class="text-primary">{{item.goods_item ? item.goods_item.cover : '商品已被删除'}}</a>
+								</p>
 								</div>
 							</div>
 						</template>
 					</el-table-column>
 					<el-table-column width="120" label="实付款" align="center">
 						<template slot-scope="scope">
-							<span>￥20</span>
+							<span>￥{{scope.row.total_price}}</span>
 							<p><small>(含运费：￥0.00)</small></p>
 						</template>
 					</el-table-column>
 					<el-table-column width="120" label="买家" align="center">
 						<template slot-scope="scope">
-							<span>用户名</span>
-							<p><small>(用户id：Mew)</small></p>
+							<span>{{scope.row.user.username}}</span>
+							<p><small>(用户id：{{scope.row.user.id}})</small></p>
 						</template>
 					</el-table-column>
 					<el-table-column prop="status" label="支付方式" align="center">
 						<template slot-scope="scope">
-							<span class="badge badge-success">微信支付</span>
+							<span class="badge badge-success"
+							v-if="scope.row.payment_method === 'wechat'">微信支付</span>
+							<span class="badge badge-primary"
+							v-else-if="scope.row.payment_method === 'alipay'">支付宝支付</span>
+							<span class="badge badge-success" v-else>未支付</span>
 
 						</template>
 					</el-table-column>
-					<el-table-column prop="stock" label="配送方式" align="center">
-
-
+					<el-table-column label="配送方式" align="center">
+					<template slot-scope="scope">
+						<div v-if="scope.row.ship_data">
+							<div>{{scope.row.ship_data.express_company}}</div>
+							<div>{{scope.row.ship_data.express_no}}</div>
+						</div>
+						<span class="badge badge-default" v-else>未配送</span>
+					</template>
 					</el-table-column>
 					<el-table-column width="170" label="交易状态" align="center">
 						<template slot-scope="scope">
 							<div>付款状态:
-								<span class="badge badge-success">已付款</span>
+								<span 
+								class="badge"
+								:class="scope.row.payment_method ? 'badge-success':'badge-secondary'">{{scope.row.payment_method ? '已付款' : '未付款'}}</span>
 							</div>
 							<div>发货状态:
-								<span class="badge badge-success">待发货</span>
+								<span 
+								class="badge"
+								:class="scope.row.ship_data ? 'badge-success' : 'badge-secondary'"
+								>{{scope.row.ship_data ?'已发货' : '未发货'}}</span>
 							</div>
 							<div>收货状态:
-								<span class="badge badge-success">待收货</span>
+								<span class="badge"
+								:class="scope.row.ship_status === 'received' ? 'badge-success' :'badge-secondary'">{{scope.row.ship_status === 'received' ? '已收货':'未收货'}}</span>
 							</div>
 						</template>
 					</el-table-column>
@@ -135,8 +154,7 @@
 						</el-pagination>
 					</div>
 				</el-footer>
-			</el-tab-pane>
-		</el-tabs>
+	
 	</div>
 </template>
 
@@ -187,83 +205,40 @@
 					}
 				],
 				form: {
-					code: "",
+					no: "",
 					type: "",
 					time: "",
 					username: "",
 					phone: ""
 				},
 				tableData: [],
-				multipleSelection: []
+			}
+		},
+		computed: {
+			tab() {
+				return this.tabbars[this.tabIndex].key
 			}
 		},
 		methods: {
 			// 获取请求列表分页url
 			getListUrl(){
-				return `/admin/${this.preUrl}/${this.page.current}?limit=${this.page.size}&tab=${this.tab}`
+				return `/admin/${this.preUrl}/${this.page.current}?limit=${this.page.size}&tab=${this.tab}&no=${this.form.no}`
 			},
 			// 处理获取列表结果
 			getListResult(e){
 				console.log(e)
 				this.tableData = e.list
 			},
-			// 生成模拟数据
-			__getData() {
-				for (let i = 0; i < this.tabbars.length; i++) {
-					this.tableData.push({
-						currentPage: 1,
-						list: []
-					})
-					for (let j = 0; j < 20; j++) {
-						this.tableData[i].list.push({
-							id: j,
-							title: '荣耀 V10全网通 标配版 4GB+64GB 魅丽红' + i + '-' + j,
-							cover: 'http://static.yoshop.xany6.com/2018071718294208f086786.jpg',
-							create_time: '2021-08-07 2:12:14',
-							category: "手机",
-							type: "普通商品",
-							sale_count: 20,
-							order: 100,
-							status: 1,
-							stock: 200,
-							pprice: 1000,
-							ischeck: 1
-							// 0未审核，1通过，2不通过
-						})
-					}
-				}
-			},
-			// 上架/下架
-			changeStatus(item) {
-				item.status = item.status === 1 ? 0 : 1
-			},
-			// 删除当前商品
-			deleteItem(index) {
-				this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
-					confirmButtonText: '确定',
-					cancelButtonText: '取消',
-					type: 'warning'
-				}).then(() => {
-					this.tableData[this.tabIndex].list.splice(index, 1)
-					this.$message({
-						type: 'success',
-						message: '删除成功!'
-					});
-				})
-			},
-			// 选中
-			handleSelectionChange(val) {
-				this.multipleSelection = val;
-			},
 			// 加载数据
 			handleClick(tab, event) {
 				this.getList()
 			},
 			// 搜索事件
-			searchEvent(e) {
+			searchEvent(e = false) {
 				// 简单搜索
-				console.log(e)
 				if (typeof e === 'string') {
+					this.form.no = e
+					this.getList()
 					return console.log('简单搜索', e)
 				}
 				// 高级搜索
@@ -272,13 +247,12 @@
 			// 清空筛选条件
 			clearSearch() {
 				this.form = {
-					code: "",
+					no: "",
 					type: "",
 					time: "",
 					username: "",
 					phone: "",
 				}
-				this.$refs.buttonSearch[this.tabIndex].closeSuperSearch()
 			}
 		}
 	}

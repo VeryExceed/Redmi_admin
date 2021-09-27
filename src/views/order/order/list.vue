@@ -40,19 +40,7 @@
 			</template>
 		</buttomn-search>
 		<!-- 商品列表 -->
-		<!--
-				 商品
-					图片 http://static.yoshop.xany6.com/2018071718294208f086786.jpg
-					名称 荣耀 V10全网通 标配版 4GB+64GB 魅丽红 
-					时间	 2019-07-17 18:34:14
-				 	分类  手机
-				 商品类型（普通商品）	
-				 实际销量（20）
-				 商品排序（100）
-				 商品状态（上架）
-				 总库存（200）
-				 价格(元)（1000.00）
-				 -->
+		
 		<el-table border class="mt-3" :data="tableData" style="width: 100%" @selection-change="handleSelectionChange">
 			<el-table-column type="selection" width="45" align="center">
 			</el-table-column>
@@ -128,7 +116,11 @@
 
 			<el-table-column label="操作" align="center" width="150">
 				<template slot-scope="scope">
-					<el-button type="primary" size="mini" plain>订单详情</el-button>
+					<el-button type="text" size="mini">订单详情</el-button>
+					</el-button>
+					<el-button type="text" size="mini"
+					@click="ship(scope.row)"
+					v-if="scope.row.ship_status === 'pending' && scope.row.closed === 0 && scope.row.payment_method && scope.row.refund_status === 'pending'">订单发货</el-button>
 					</el-button>
 				</template>
 			</el-table-column>
@@ -144,7 +136,28 @@
 				</el-pagination>
 			</div>
 		</el-footer>
-
+		
+		<el-dialog title="订单发货" :visible.sync="shipModal" width="30%">
+			<el-form ref="ruleForm" :model="shipForm" label-width="80px">
+				<el-form-item label="快递公司" prop="express_company">
+					<el-select v-model="shipForm.express_company" placeholder="请选择">
+						<el-option 
+						v-for="(item,index) in express_company_options"
+						:key="index"
+						:label="item.name" 
+						:value="item.name"></el-option>
+					
+					</el-select>
+				</el-form-item>
+				<el-form-item label="快递单号" prop="express_no">
+					<el-input type="text" v-model="shipForm.express_no"></el-input>
+				</el-form-item>
+			</el-form>
+			<div slot="footer" class="dialog-footer">
+				<el-button @click="createModel = false">取 消</el-button>
+				<el-button type="primary" @click="shipSubmit">确 定</el-button>
+			</div>
+		</el-dialog>
 	</div>
 </template>
 
@@ -201,6 +214,12 @@
 					phone: ""
 				},
 				tableData: [],
+				shipModal:false,
+				shipForm:{
+					express_company:"",
+					express_no:""
+				},
+				express_company_options:[]
 			}
 		},
 		computed: {
@@ -222,6 +241,14 @@
 				}
 				return str
 			}
+		},
+		created() {
+			this.axios.get('/admin/express_company/1?limit=50',{
+				token:true
+			}).then(res=>{
+				let data  = res.data.data
+				this.express_company_options = data.list 
+			})
 		},
 		methods: {
 			// 获取请求列表分页url
@@ -257,6 +284,12 @@
 					name: "",
 					phone: "",
 				}
+			},
+			ship(item) {
+				this.shipModal = true
+			},
+			shipSubmit(){
+				
 			}
 		}
 	}
